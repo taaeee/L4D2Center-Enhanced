@@ -70,6 +70,9 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 });
 
 // --- Service Worker startup ---
+// Allow content scripts to access session storage (needed for anticheat flag)
+chrome.storage.session.setAccessLevel({ accessLevel: "TRUSTED_AND_UNTRUSTED_CONTEXTS" });
+
 // Re-create the alarm if autoReady was previously enabled
 // (handles browser restart, SW wake-up, extension update)
 chrome.storage.local.get(["autoReady"], (result) => {
@@ -81,16 +84,42 @@ chrome.storage.local.get(["autoReady"], (result) => {
 // --- Native Messaging: Launch Anticheat ---
 const NATIVE_HOST_NAME = "com.l4d2center.enhanced";
 
+// Helper: Ping localhost:51115 to check if anticheat is actually running
+async function isAnticheatAlive() {
+  try {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 2000);
+    await fetch("http://localhost:51115", { method: "HEAD", signal: controller.signal });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "launchAnticheat") {
-    chrome.storage.local.get(["anticheatPath"], (result) => {
-      const exePath = result.anticheatPath;
+    (async () => {
+      // Check session flag, but verify with a live ping
+      const flagResult = await chrome.storage.session.get(["anticheatRunning"]);
+      if (flagResult.anticheatRunning) {
+        const alive = await isAnticheatAlive();
+        if (alive) {
+          console.log("L4D2 Enhanced [BG]: Anticheat verified running (ping OK), skipping launch.");
+          sendResponse({ success: true, alreadyRunning: true });
+          return;
+        } else {
+          console.log("L4D2 Enhanced [BG]: Anticheat flag was set but ping failed — was closed. Clearing flag.");
+          await chrome.storage.session.set({ anticheatRunning: false });
+        }
+      }
+
+      const localResult = await chrome.storage.local.get(["anticheatPath"]);
+      const exePath = localResult.anticheatPath;
 
       if (!exePath) {
         sendResponse({
           success: false,
-          error:
-            "Anticheat path not configured. Set it in the extension popup.",
+          error: "Anticheat path not configured. Set it in the extension popup.",
         });
         return;
       }
@@ -110,11 +139,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             });
           } else {
             console.log("L4D2 Enhanced [BG]: Native host response:", response);
+            // Do NOT set the flag here — only set after successful LOGIN
             sendResponse(response);
           }
         }
       );
-    });
+    })();
     return true; // Keep message channel open for async response
   }
 
@@ -196,8 +226,22 @@ async function handleInviteAccept(notifId) {
     const inviteData = data[`notif_${notifId}`];
 
     if (inviteData && inviteData.lobbyLink) {
-      // Step 1: Launch the anticheat exe if path is configured
-      await launchAnticheatBeforeJoin();
+      // Step 1: Check if anticheat is running (verify with ping)
+      const flagData = await chrome.storage.session.get(["anticheatRunning"]);
+      let anticheatRunning = false;
+      if (flagData.anticheatRunning) {
+        anticheatRunning = await isAnticheatAlive();
+        if (!anticheatRunning) {
+          console.log("L4D2 Enhanced [BG]: Anticheat was closed, clearing flag.");
+          await chrome.storage.session.set({ anticheatRunning: false });
+        }
+      }
+
+      if (!anticheatRunning) {
+        await launchAnticheatBeforeJoin();
+      } else {
+        console.log("L4D2 Enhanced [BG]: Anticheat verified running, skipping launch before join.");
+      }
 
       // Step 2: Try to find an existing L4D2 tab, or open a new one
       const tabs = await chrome.tabs.query({ url: L4D2_URL_PATTERN });
@@ -214,13 +258,15 @@ async function handleInviteAccept(notifId) {
         targetTab = await chrome.tabs.create({ url: inviteData.lobbyLink });
       }
 
-      // Step 3: Trigger the anticheat login on the tab once it loads
-      chrome.tabs.onUpdated.addListener(function loginOnLoad(tabId, info) {
-        if (tabId === targetTab.id && info.status === "complete") {
-          chrome.tabs.onUpdated.removeListener(loginOnLoad);
-          chrome.tabs.sendMessage(targetTab.id, { type: "triggerLogin" }).catch(() => {});
-        }
-      });
+      // Step 3: Trigger the anticheat login on the tab once it loads (only if not already running)
+      if (!anticheatRunning) {
+        chrome.tabs.onUpdated.addListener(function loginOnLoad(tabId, info) {
+          if (tabId === targetTab.id && info.status === "complete") {
+            chrome.tabs.onUpdated.removeListener(loginOnLoad);
+            chrome.tabs.sendMessage(targetTab.id, { type: "triggerLogin" }).catch(() => {});
+          }
+        });
+      }
     }
 
     chrome.notifications.clear(notifId);
@@ -248,6 +294,7 @@ function launchAnticheatBeforeJoin() {
             console.warn("L4D2 Enhanced [BG]: Anticheat launch error (may already be running):", chrome.runtime.lastError.message);
           } else {
             console.log("L4D2 Enhanced [BG]: Anticheat launched before join:", response);
+            // Do NOT set the flag here — only set after successful LOGIN
           }
           // Wait 3s for the anticheat to start before proceeding
           setTimeout(resolve, 3000);

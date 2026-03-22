@@ -85,7 +85,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 // Listen for messages from popup/background
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "triggerLogin") {
-    // Popup asked us to trigger the anticheat login on this page
+    // Popup/background asked us to trigger the anticheat login on this page
     const btn = document.getElementById("anticheat-header-btn");
     if (btn) {
       triggerAnticheatLogin(btn);
@@ -208,16 +208,23 @@ function injectAnticheatButton() {
   setAnticheatBtnState(btn, "Anticheat", false);
 
   btn.addEventListener("click", () => {
-    setAnticheatBtnState(btn, "Launching...", true);
+    setAnticheatBtnState(btn, "Checking...", true);
 
-    // Step 1: Launch the .exe via native messaging (background.js)
+    // Send to background — it will verify with a live ping before deciding
     chrome.runtime.sendMessage({ type: "launchAnticheat" }, (response) => {
+      if (response && response.alreadyRunning) {
+        console.log("L4D2 Enhanced: Anticheat already running (verified by background).");
+        setAnticheatBtnState(btn, "✓ Already running", false);
+        setTimeout(() => setAnticheatBtnState(btn, "Anticheat", false), 2000);
+        return;
+      }
+
       if (response && response.success) {
         console.log(
           "L4D2 Enhanced: Anticheat launched, waiting for startup..."
         );
         setAnticheatBtnState(btn, "Logging in...", true);
-        // Step 2: Wait 3s for the anticheat to start, then login
+        // Wait 3s for the anticheat to start, then login
         setTimeout(() => triggerAnticheatLogin(btn), 3000);
       } else {
         console.warn(
@@ -262,6 +269,8 @@ function triggerAnticheatLogin(btn) {
 
       setAnticheatBtnState(btn, "✓ Done!", false);
       console.log("L4D2 Enhanced: Anticheat login submitted with token");
+      // Mark anticheat as running in session storage
+      chrome.storage.session.set({ anticheatRunning: true });
       setTimeout(() => setAnticheatBtnState(btn, "Anticheat", false), 2000);
     } else {
       console.error("L4D2 Enhanced: Anticheat login failed:", data?.error);

@@ -18,7 +18,8 @@
   "host_permissions": [
     "https://l4d2center.com/*",
     "https://api.l4d2center.com/*",
-    "https://vctxtgacwuprmivvgclw.supabase.co/*"
+    "https://vctxtgacwuprmivvgclw.supabase.co/*",
+    "http://localhost/*"
   ],
   "background": {
     "service_worker": "background.js"

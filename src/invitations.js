@@ -394,10 +394,15 @@ const Invitations = {
   // Launch anticheat + login if not already running, returns a promise
   ensureAnticheatRunning: function () {
     return new Promise((resolve) => {
-      this.showNotification("Checking anticheat...", "info", 2000);
-
-      // Step 1: Launch the exe via background native messaging
+      // Send to background — it verifies with a live ping before deciding
       chrome.runtime.sendMessage({ type: "launchAnticheat" }, (response) => {
+        if (response && response.alreadyRunning) {
+          console.log("L4D2 Enhanced: Anticheat already running (verified by background), skipping.");
+          this.showNotification("✓ Anticheat already running", "success", 1500);
+          resolve();
+          return;
+        }
+
         if (response && response.success) {
           console.log("L4D2 Enhanced: Anticheat launched, waiting for startup...");
           this.showNotification("Anticheat launched, logging in...", "info", 3000);
@@ -438,6 +443,8 @@ const Invitations = {
 
           this.showNotification("✓ Anticheat ready!", "success", 2000);
           console.log("L4D2 Enhanced: Anticheat login OK before joining party");
+          // Mark anticheat as running in session storage
+          chrome.storage.session.set({ anticheatRunning: true });
         } else {
           console.warn("L4D2 Enhanced: Anticheat login failed:", event.data?.error);
           this.showNotification("Anticheat login failed, joining anyway...", "error", 2000);
