@@ -18,7 +18,7 @@
 
 - [How to install extension](#how-to-install-extension)
 - [How to configure the launcher](#how-to-configure-the-launcher)
-
+- [Video tutorial](#video-tutorial)
 
 ## How to install extension
 **Clone repository or download from "<> Code -> Download ZIP"**
@@ -39,4 +39,6 @@
 7. Click the save button to save the path to the .exe file.
 8. Reload the extension and the l4d2center page.
 
+## Video tutorial
+[Video Tutorial](http://https://www.youtube.com/watch?v=oEvuccT6Pqk "Video Tutorial")
 
