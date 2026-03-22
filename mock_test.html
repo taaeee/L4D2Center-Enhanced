@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>L4D2 Center Mock</title>
+    <!-- Simulating the target site structure -->
+    <link rel="stylesheet" href="src/inject.css" />
+    <!-- Manually linked for test -->
+    <style>
+      body {
+        background: #333;
+        color: white;
+      }
+      .header__nav {
+        background: #444;
+        padding: 10px;
+        display: flex;
+        justify-content: flex-end;
+      }
+      .header__logo img {
+        width: 100px;
+      }
+      .btn-grey {
+        background: grey;
+        padding: 5px;
+      }
+      .btn {
+        background: blue;
+        padding: 5px;
+        color: white;
+      }
+      .chat-content__lobby {
+        margin: 5px;
+        padding: 5px;
+        border: 1px solid #555;
+      }
+      #playerpanel {
+        margin-top: 20px;
+        border: 1px solid red;
+        padding: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header__logo">
+      <img src="old_logo.png" alt="Logo" />
+    </div>
+
+    <div class="header__nav">
+      <!-- Switch should appear here -->
+      <span>Nav Item 1</span>
+    </div>
+
+    <!-- Structure based on REAL HTML SNAPSHOT -->
+    <div class="chat players">
+      <a href="#" class="chat__head">
+        <div class="chat__head__header">Players</div>
+        <div class="chat-item">
+          <div class="chat-item__title">
+            Online: <span id="onlinecount">414</span>
+          </div>
+        </div>
+      </a>
+      <div class="chat__main">
+        <div class="chat-content__wrap">
+          <div class="chat-content" id="allplayers">
+            <!-- Example Items -->
+            <div class="chat-content__item">
+              <span>PlayerOne</span>
+              <div class="chat-content__lobby">In Game - Versus</div>
+            </div>
+            <div class="chat-content__item">
+              <span>PlayerTwo</span>
+              <div class="chat-content__lobby">In Queue - Scavenge</div>
+            </div>
+            <div class="chat-content__item">
+              <span>PlayerThree</span>
+              <div class="chat-content__lobby">Idle</div>
+            </div>
+            <div class="chat-content__item">
+              <span>PlayerFour</span>
+              <div class="chat-content__lobby">In Queue - Versus</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="playerpanel">
+      <div class="private-invite__input">
+        <!-- Target for the spoiler effect -->
+        <input
+          type="text"
+          id="invitecodeoutput_inparty"
+          value="PARTYCODE12345"
+          readonly
+        />
+      </div>
+      <button class="ready__btn" onclick="alert('Ready Clicked!')">
+        Ready Button
+      </button>
+    </div>
+
+    <!-- Injecting script manually for test -->
+    <script>
+      // Mock chrome API
+      window.chrome = {
+        storage: {
+          local: {
+            get: (keys, cb) => cb({ autoReady: true }),
+            set: (obj) => console.log("Saved:", obj),
+          },
+        },
+      };
+    </script>
+    <script src="src/content.js"></script>
+
+    <script>
+      // Simulate dynamic content loading
+      setTimeout(() => {
+        const newBtn = document.createElement("a");
+        newBtn.innerHTML = '<span class="btn-grey">Dynamic Button</span>';
+        document.body.appendChild(newBtn);
+      }, 2000);
+    </script>
+  </body>
+</html>

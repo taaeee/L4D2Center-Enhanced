@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "L4D2 Center Enhanced",
+  "version": "1.1.0",
+  "description": "Mejoras visuales y utilidades para L4D2Center (AutoReady, Temas, Iconos).",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "storage",
+    "alarms",
+    "scripting",
+    "nativeMessaging",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://l4d2center.com/*",
+    "https://api.l4d2center.com/*",
+    "https://vctxtgacwuprmivvgclw.supabase.co/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://l4d2center.com/*"],
+      "css": ["src/inject.css"],
+      "js": ["src/lib/supabase.js", "src/invitations.js", "src/content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/interceptor.js",
+        "icons/add_friend.svg",
+        "icons/delete_friend.svg",
+        "icons/friends.svg",
+        "icons/invite_sent.svg",
+        "icons/nickname_edit.svg"
+      ],
+      "matches": ["https://l4d2center.com/*"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html"
+  }
+}

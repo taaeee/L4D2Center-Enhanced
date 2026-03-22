@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>L4D2 Center Enhanced</title>
+    <style>
+      :root {
+        --bg-color: #1a1a1a;
+        --card-bg: #2d2d2d;
+        --text-primary: #ffffff;
+        --text-secondary: #b0b0b0;
+        --accent: #ff9800;
+        --accent-hover: #f57c00;
+        --toggle-bg: #4a4a4a;
+        --toggle-active: #4caf50;
+      }
+
+      body {
+        width: 320px;
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+
+      .container {
+        padding: 16px;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 16px;
+        border-bottom: 1px solid #3d3d3d;
+        padding-bottom: 12px;
+      }
+
+      .logo {
+        width: 32px;
+        height: 32px;
+        margin-right: 10px;
+        border-radius: 4px;
+      }
+
+      .title {
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      /* Section Headers */
+      .section-header {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--accent);
+        margin: 16px 0 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .settings-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--card-bg);
+        padding: 10px 12px;
+        border-radius: 8px;
+        transition: transform 0.1s;
+      }
+
+      .setting-item:hover {
+        transform: translateY(-1px);
+      }
+
+      .setting-label {
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .setting-desc {
+        font-size: 10px;
+        color: var(--text-secondary);
+        margin-top: 2px;
+      }
+
+      /* Toggle Switch */
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 22px;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--toggle-bg);
+        transition: 0.4s;
+        border-radius: 22px;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+
+      input:checked + .slider {
+        background-color: var(--accent);
+      }
+
+      input:checked + .slider:before {
+        transform: translateX(18px);
+      }
+
+      /* Color Picker */
+      .color-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--card-bg);
+        padding: 8px 12px;
+        border-radius: 8px;
+      }
+
+      .color-item label {
+        font-size: 12px;
+        color: var(--text-secondary);
+      }
+
+      .color-picker {
+        width: 32px;
+        height: 24px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        background: none;
+        padding: 0;
+      }
+
+      .color-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      /* Preset Themes */
+      .theme-presets {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+
+      .theme-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+        border: 1px solid #444;
+        border-radius: 4px;
+        background: var(--card-bg);
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .theme-btn:hover {
+        border-color: var(--accent);
+        background: #3d3d3d;
+      }
+
+      .theme-btn.active {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #000;
+      }
+
+      .footer {
+        margin-top: 16px;
+        text-align: center;
+        font-size: 10px;
+        color: var(--text-secondary);
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      /* Anticheat Button */
+      .anticheat-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 10px 16px;
+        margin-top: 16px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #000;
+        background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: opacity 0.2s, transform 0.1s;
+        text-decoration: none;
+        box-sizing: border-box;
+      }
+
+      .anticheat-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+
+      .anticheat-btn:active {
+        transform: translateY(0);
+      }
+
+      .anticheat-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .anticheat-btn svg {
+        width: 16px;
+        height: 16px;
+        fill: #000;
+      }
+
+      /* Anticheat Path Input */
+      .path-input-group {
+        display: flex;
+        gap: 6px;
+        margin-top: 8px;
+      }
+
+      .path-input {
+        flex: 1;
+        padding: 6px 8px;
+        font-size: 11px;
+        background: #3d3d3d;
+        border: 1px solid #555;
+        border-radius: 4px;
+        color: var(--text-primary);
+        outline: none;
+      }
+
+      .path-input:focus {
+        border-color: var(--accent);
+      }
+
+      .path-save-btn,
+      .path-browse-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+        background: var(--accent);
+        color: #000;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .path-save-btn:hover,
+      .path-browse-btn:hover {
+        opacity: 0.9;
+      }
+
+      .path-browse-btn:disabled,
+      .path-save-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .path-status {
+        font-size: 10px;
+        color: var(--toggle-active);
+        margin-top: 4px;
+      }
+
+      .setup-note {
+        font-size: 10px;
+        color: var(--text-secondary);
+        margin-top: 6px;
+        line-height: 1.4;
+      }
+
+      .setup-note a {
+        color: var(--accent);
+      }
+
+      /* Saved Themes */
+      .saved-themes-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        min-height: 24px;
+      }
+
+      .saved-theme-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        font-size: 11px;
+        background: var(--card-bg);
+        border: 1px solid #444;
+        border-radius: 12px;
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .saved-theme-chip:hover {
+        border-color: var(--accent);
+        background: #3d3d3d;
+      }
+
+      .saved-theme-chip .chip-delete {
+        font-size: 10px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        margin-left: 2px;
+        border-radius: 50%;
+        width: 14px;
+        height: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+      }
+
+      .saved-theme-chip .chip-delete:hover {
+        background: #ff4444;
+        color: #fff;
+      }
+
+      .saved-theme-chip .chip-colors {
+        display: inline-flex;
+        gap: 2px;
+      }
+
+      .saved-theme-chip .chip-swatch {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+
+      .theme-actions-row {
+        display: flex;
+        gap: 6px;
+        margin-top: 6px;
+      }
+
+      .theme-action-btn {
+        flex: 1;
+        padding: 6px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        border: 1px solid #444;
+        border-radius: 4px;
+        background: var(--card-bg);
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+      }
+
+      .theme-action-btn:hover {
+        border-color: var(--accent);
+        background: #3d3d3d;
+      }
+
+      .theme-action-status {
+        font-size: 10px;
+        margin-top: 4px;
+        min-height: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <img src="../icons/icon48.png" alt="Icon" class="logo" />
+        <div class="title">L4D2 Center Enhanced</div>
+      </div>
+
+      <!-- Features Section -->
+      <div class="section-header">Features</div>
+      <div class="settings-list">
+        <div class="setting-item">
+          <div>
+            <div class="setting-label">Auto Ready</div>
+            <div class="setting-desc">Automatically click "Ready"</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="autoReady" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <div>
+            <div class="setting-label">Streamer Mode</div>
+            <div class="setting-desc">Blur Party Code</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="streamerMode" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <div>
+            <div class="setting-label">Custom Theme</div>
+            <div class="setting-desc">Apply custom colors to page</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="customTheme" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Theme Section -->
+      <div class="section-header">Theme Presets</div>
+      <div class="theme-presets">
+        <button class="theme-btn" data-theme="default">Default</button>
+        <button class="theme-btn" data-theme="purple">Purple</button>
+        <button class="theme-btn" data-theme="blue">Blue</button>
+        <button class="theme-btn" data-theme="red">Red</button>
+        <button class="theme-btn" data-theme="green">Green</button>
+      </div>
+
+      <div class="section-header">Custom Colors</div>
+      <div class="settings-list">
+        <div class="color-row">
+          <div class="color-item">
+            <label>Background</label>
+            <input
+              type="color"
+              class="color-picker"
+              id="colorBg"
+              value="#000000"
+            />
+          </div>
+          <div class="color-item">
+            <label>Top/Cards</label>
+            <input
+              type="color"
+              class="color-picker"
+              id="colorTop"
+              value="#000000"
+            />
+          </div>
+        </div>
+        <div class="color-row">
+          <div class="color-item">
+            <label>Text</label>
+            <input
+              type="color"
+              class="color-picker"
+              id="colorText"
+              value="#b8b5ba"
+            />
+          </div>
+          <div class="color-item">
+            <label>Border</label>
+            <input
+              type="color"
+              class="color-picker"
+              id="colorBorder"
+              value="#b8b5ba"
+            />
+          </div>
+        </div>
+        <div class="color-row">
+          <div class="color-item">
+            <label>Accent 1</label>
+            <input
+              type="color"
+              class="color-picker"
+              id="colorAccent1"
+              value="#e39de9"
+            />
+          </div>
+          <div class="color-item">
+            <label>Accent 2</label>
+            <input
+              type="color"
+              class="color-picker"
+              id="colorAccent2"
+              value="#6b3089"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Saved Themes Section -->
+      <div class="section-header">Saved Themes</div>
+      <div class="settings-list">
+        <div class="saved-themes-list" id="savedThemesList">
+          <!-- Saved theme chips render here -->
+        </div>
+        <div class="theme-actions-row">
+          <button class="theme-action-btn" id="saveThemeBtn">💾 Save</button>
+          <button class="theme-action-btn" id="exportThemeBtn">
+            📤 Export
+          </button>
+          <button class="theme-action-btn" id="importThemeBtn">
+            📥 Import
+          </button>
+        </div>
+        <div class="theme-action-status" id="themeActionStatus"></div>
+      </div>
+
+      <!-- Anticheat Section -->
+      <div class="section-header">Anticheat</div>
+      <div class="settings-list">
+        <div
+          class="setting-item"
+          style="flex-direction: column; align-items: stretch"
+        >
+          <div class="setting-label">Anticheat Path (.exe)</div>
+          <div class="path-input-group">
+            <input
+              type="text"
+              class="path-input"
+              id="anticheatPath"
+              placeholder="C:\path\to\l4d2c_anticheat.exe"
+            />
+            <button
+              class="path-browse-btn"
+              id="browseAnticheatPath"
+              title="Browse for .exe"
+            >
+              📁
+            </button>
+            <button class="path-save-btn" id="saveAnticheatPath">Save</button>
+          </div>
+          <div class="path-status" id="pathStatus"></div>
+          <div class="setup-note">
+            Run <strong>native_host/install_host.bat</strong> once to enable
+            launch.
+          </div>
+        </div>
+      </div>
+
+      <button class="anticheat-btn" id="anticheatLogin">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.13 9.37-7 10.5-3.87-1.13-7-5.67-7-10.5V6.3l7-3.12z"
+          />
+        </svg>
+        Launch & Login
+      </button>
+
+      <div class="footer">
+        <p>L4D2 Center Enhanced v1.1</p>
+      </div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
