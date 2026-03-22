@@ -30,7 +30,7 @@
 5. Reload l4d2center.com.
 
 ## How to configure the launcher
-1. Open the **L4D2CenterEnhanced** folder.
+1. Open the **L4D2CenterEnhanced/native_host** folder.
 2. Launch **install_host.bat**
 3. Find your extension ID in your extensions tab.
 4. Paste it in the program and press Enter.
