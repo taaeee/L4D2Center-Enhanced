@@ -14,21 +14,20 @@
 
 
 
-**Table of Contents**
+## Table of Contents
 
-[TOCM]
+- [How to install extension](#how-to-install-extension)
+- [How to configure the launcher](#how-to-configure-the-launcher)
 
-[TOC]
 
-
-##How to install extension
+## How to install extension
 1. Extract the **L4D2CenterEnhanced.rar**.
 2. Open your browser in **extensions tab**.
 3. Enable **Developer mode**.
 4. Click on **Load unpacked** and select the extracted folder.
 5. Reload l4d2center.com.
 
-##How to configure the launcher
+## How to configure the launcher
 1. Open the **L4D2CenterEnhanced** folder.
 2. Launch **install_host.bat**
 3. Find your extension ID in your extensions tab.
@@ -37,3 +36,5 @@
 6. Click on the folder button to find your anticheat.exe
 7. Click the save button to save the path to the .exe file.
 8. Reload the extension and the l4d2center page.
+
+
