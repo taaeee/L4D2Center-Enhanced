@@ -21,7 +21,9 @@
 
 
 ## How to install extension
-1. Extract the **L4D2CenterEnhanced.rar**.
+**Clone repository or download from "<> Code -> Download ZIP"**
+
+1. Extract the **L4D2Center-Enhanced-main.zip**.
 2. Open your browser in **extensions tab**.
 3. Enable **Developer mode**.
 4. Click on **Load unpacked** and select the extracted folder.
