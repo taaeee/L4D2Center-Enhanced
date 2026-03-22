@@ -40,5 +40,5 @@
 8. Reload the extension and the l4d2center page.
 
 ## Video tutorial
-[Video Tutorial](http://https://www.youtube.com/watch?v=oEvuccT6Pqk "Video Tutorial")
+[Video Tutorial](https://www.youtube.com/watch?v=oEvuccT6Pqk)
 
