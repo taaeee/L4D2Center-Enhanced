@@ -276,6 +276,119 @@ async function handleInviteAccept(notifId) {
   }
 }
 
+// --- GitHub Update Checker ---
+
+const GITHUB_REPO = "taaeee/L4D2Center-Enhanced";
+const UPDATE_ALARM_NAME = "updateCheckAlarm";
+const UPDATE_CHECK_INTERVAL_MINUTES = 360; // 6 hours
+
+// Compare semver strings: returns true if remote > local
+function isNewerVersion(remote, local) {
+  const r = remote.replace(/^v/, "").split(".").map(Number);
+  const l = local.split(".").map(Number);
+  for (let i = 0; i < Math.max(r.length, l.length); i++) {
+    const rv = r[i] || 0;
+    const lv = l[i] || 0;
+    if (rv > lv) return true;
+    if (rv < lv) return false;
+  }
+  return false;
+}
+
+async function checkForUpdate() {
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`,
+      { headers: { "Accept": "application/vnd.github.v3+json" } }
+    );
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+    const release = await res.json();
+
+    const remoteVersion = release.tag_name.replace(/^v/, "");
+    const localVersion = chrome.runtime.getManifest().version;
+    const hasUpdate = isNewerVersion(remoteVersion, localVersion);
+
+    // Find the .zip asset or fallback to zipball_url
+    const zipAsset = release.assets?.find((a) => a.name.endsWith(".zip"));
+    const downloadUrl = zipAsset ? zipAsset.browser_download_url : release.zipball_url;
+
+    await chrome.storage.local.set({
+      updateAvailable: hasUpdate,
+      updateVersion: remoteVersion,
+      updateUrl: downloadUrl,
+      updateNotes: release.body || "",
+      updateCheckedAt: Date.now(),
+    });
+
+    console.log(
+      `L4D2 Enhanced [BG]: Update check — local=${localVersion} remote=${remoteVersion} update=${hasUpdate}`
+    );
+    return { hasUpdate, version: remoteVersion };
+  } catch (err) {
+    console.error("L4D2 Enhanced [BG]: Update check failed:", err.message);
+    return { hasUpdate: false, error: err.message };
+  }
+}
+
+async function getChangelog() {
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=10`,
+      { headers: { "Accept": "application/vnd.github.v3+json" } }
+    );
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+    const releases = await res.json();
+
+    return releases.map((r) => ({
+      version: r.tag_name.replace(/^v/, ""),
+      name: r.name || r.tag_name,
+      date: r.published_at,
+      notes: r.body || "",
+      url: r.html_url,
+    }));
+  } catch (err) {
+    console.error("L4D2 Enhanced [BG]: Changelog fetch failed:", err.message);
+    return [];
+  }
+}
+
+// Set up update check alarm
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === UPDATE_ALARM_NAME) {
+    checkForUpdate();
+  }
+});
+
+// Create alarm on startup + do initial check
+chrome.alarms.create(UPDATE_ALARM_NAME, {
+  delayInMinutes: 1,
+  periodInMinutes: UPDATE_CHECK_INTERVAL_MINUTES,
+});
+checkForUpdate();
+
+// Post-update: set flag to show "What's New" on next popup open
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === "update") {
+    const newVersion = chrome.runtime.getManifest().version;
+    chrome.storage.local.set({ showWhatsNew: true, whatsNewVersion: newVersion });
+    // Clear stale update banner since we just updated
+    chrome.storage.local.set({ updateAvailable: false });
+    console.log(`L4D2 Enhanced [BG]: Updated to v${newVersion}, will show What's New.`);
+  }
+});
+
+// Handle messages from popup
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "checkForUpdate") {
+    checkForUpdate().then(sendResponse);
+    return true;
+  }
+  if (message.type === "getChangelog") {
+    getChangelog().then(sendResponse);
+    return true;
+  }
+});
+
 // Helper: Launch anticheat exe via native messaging (returns a promise)
 function launchAnticheatBeforeJoin() {
   return new Promise((resolve) => {

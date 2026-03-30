@@ -427,4 +427,140 @@ document.addEventListener("DOMContentLoaded", () => {
       }, delay);
     });
   });
+
+  // --- Update Banner & Changelog ---
+  const updateBanner = document.getElementById("updateBanner");
+  const updateVersionEl = document.getElementById("updateVersion");
+  const updateNotesEl = document.getElementById("updateNotes");
+  const updateDownloadBtn = document.getElementById("updateDownloadBtn");
+  const versionLink = document.getElementById("versionLink");
+  const currentVersionEl = document.getElementById("currentVersion");
+  const checkUpdateBtn = document.getElementById("checkUpdateBtn");
+  const changelogOverlay = document.getElementById("changelogOverlay");
+  const changelogClose = document.getElementById("changelogClose");
+  const changelogBody = document.getElementById("changelogBody");
+
+  // Set current version from manifest
+  const manifestVersion = chrome.runtime.getManifest().version;
+  currentVersionEl.textContent = manifestVersion;
+
+  // Check for update banner
+  let storedUpdateUrl = "";
+  chrome.storage.local.get(
+    ["updateAvailable", "updateVersion", "updateUrl", "updateNotes", "showWhatsNew"],
+    (result) => {
+      if (result.updateAvailable && result.updateVersion) {
+        storedUpdateUrl = result.updateUrl || "";
+        updateVersionEl.textContent = `v${result.updateVersion}`;
+        updateNotesEl.textContent = truncateNotes(result.updateNotes || "");
+        updateBanner.classList.add("visible");
+      }
+
+      // What's New: auto-open changelog after extension update
+      if (result.showWhatsNew) {
+        chrome.storage.local.set({ showWhatsNew: false });
+        openChangelog();
+      }
+    }
+  );
+
+  function truncateNotes(notes, maxLen = 200) {
+    if (notes.length <= maxLen) return notes;
+    return notes.substring(0, maxLen) + "…";
+  }
+
+  // Download button
+  updateDownloadBtn.addEventListener("click", () => {
+    if (storedUpdateUrl) {
+      chrome.tabs.create({ url: storedUpdateUrl });
+    }
+  });
+
+  // Check for updates manually
+  checkUpdateBtn.addEventListener("click", () => {
+    checkUpdateBtn.textContent = "Buscando...";
+    checkUpdateBtn.disabled = true;
+
+    chrome.runtime.sendMessage({ type: "checkForUpdate" }, (response) => {
+      if (response && response.hasUpdate) {
+        chrome.storage.local.get(["updateVersion", "updateUrl", "updateNotes"], (data) => {
+          storedUpdateUrl = data.updateUrl || "";
+          updateVersionEl.textContent = `v${data.updateVersion}`;
+          updateNotesEl.textContent = truncateNotes(data.updateNotes || "");
+          updateBanner.classList.add("visible");
+          checkUpdateBtn.textContent = "¡Actualización encontrada!";
+          checkUpdateBtn.style.color = "#4caf50";
+          checkUpdateBtn.style.borderColor = "#4caf50";
+        });
+      } else {
+        checkUpdateBtn.textContent = "✓ Estás al día";
+        checkUpdateBtn.style.color = "#4caf50";
+        checkUpdateBtn.style.borderColor = "#4caf50";
+      }
+
+      setTimeout(() => {
+        checkUpdateBtn.disabled = false;
+        checkUpdateBtn.textContent = "Buscar actualizaciones";
+        checkUpdateBtn.style.color = "";
+        checkUpdateBtn.style.borderColor = "";
+      }, 3000);
+    });
+  });
+
+  // Changelog modal
+  versionLink.addEventListener("click", () => openChangelog());
+
+  changelogClose.addEventListener("click", () => {
+    changelogOverlay.classList.remove("visible");
+  });
+
+  changelogOverlay.addEventListener("click", (e) => {
+    if (e.target === changelogOverlay) {
+      changelogOverlay.classList.remove("visible");
+    }
+  });
+
+  function openChangelog() {
+    changelogOverlay.classList.add("visible");
+    changelogBody.innerHTML = '<div class="changelog-loading">Cargando changelog...</div>';
+
+    chrome.runtime.sendMessage({ type: "getChangelog" }, (releases) => {
+      if (!releases || releases.length === 0) {
+        changelogBody.innerHTML =
+          '<div class="changelog-empty">No hay releases disponibles aún.</div>';
+        return;
+      }
+
+      changelogBody.innerHTML = "";
+      releases.forEach((release) => {
+        const el = document.createElement("div");
+        el.className = "changelog-release";
+
+        const dateStr = release.date
+          ? new Date(release.date).toLocaleDateString("es-MX", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
+          : "";
+
+        el.innerHTML = `
+          <div class="changelog-release-header">
+            <span class="changelog-release-version">v${escapeHtml(release.version)}</span>
+            <span class="changelog-release-date">${escapeHtml(dateStr)}</span>
+          </div>
+          ${release.name !== release.version ? `<div class="changelog-release-name">${escapeHtml(release.name)}</div>` : ""}
+          <div class="changelog-release-notes">${escapeHtml(release.notes || "Sin notas.")}</div>
+        `;
+
+        changelogBody.appendChild(el);
+      });
+    });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
 });
