@@ -267,6 +267,12 @@ const MatchHistory = {
   openHistoryOverlay: async function () {
     if (document.getElementById("l4d2-history-overlay")) return;
 
+    // Ensure Supabase client and user are available before opening
+    if (!this.currentUser) this.currentUser = this.identifyUser();
+    if (!this.supabase && typeof window.supabase !== "undefined" && window.supabase.createClient) {
+      this.supabase = window.supabase.createClient(this.config.url, this.config.key);
+    }
+
     const overlay = document.createElement("div");
     overlay.id = "l4d2-history-overlay";
     overlay.className = "mh-overlay";
@@ -305,12 +311,23 @@ const MatchHistory = {
    * Load match history from Supabase and render it.
    */
   loadHistory: async function (offset) {
-    if (!this.supabase || !this.currentUser) return;
-
     const body = document.getElementById("mh-body");
     const footer = document.getElementById("mh-footer");
     const summary = document.getElementById("mh-summary");
     if (!body) return;
+
+    // Re-try init if needed
+    if (!this.currentUser) this.currentUser = this.identifyUser();
+    if (!this.supabase && typeof window.supabase !== "undefined" && window.supabase.createClient) {
+      this.supabase = window.supabase.createClient(this.config.url, this.config.key);
+    }
+
+    if (!this.supabase || !this.currentUser) {
+      body.innerHTML = `<div class="mh-error">Could not connect to database. Please reload the page and try again.</div>`;
+      if (summary) summary.innerHTML = "";
+      console.warn("L4D2 Enhanced: MatchHistory - supabase:", !!this.supabase, "user:", this.currentUser);
+      return;
+    }
 
     try {
       // Load matches with players
