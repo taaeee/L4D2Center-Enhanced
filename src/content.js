@@ -63,6 +63,14 @@ function init() {
       }
     }, 1000);
   }
+
+  // Initialize Match History
+  if (window.L4D2MatchHistory) {
+    setTimeout(() => {
+      window.L4D2MatchHistory.init();
+      window.L4D2MatchHistory.injectHistoryButton();
+    }, 1500);
+  }
 }
 
 // Listen for changes from the popup
@@ -315,6 +323,9 @@ function startDOMObserver() {
               node.querySelector(".header__right, .header__nav, .header__wrap")
             ) {
               injectAnticheatButton();
+              if (window.L4D2MatchHistory) {
+                window.L4D2MatchHistory.injectHistoryButton();
+              }
             }
 
             // Invite Buttons
@@ -324,6 +335,18 @@ function startDOMObserver() {
                 .forEach((item) =>
                   window.L4D2Invitations.injectInviteButton(item)
                 );
+            }
+
+            // Match History - Detect match result panel
+            if (window.L4D2MatchHistory) {
+              const matchPanel =
+                node.matches("ingamerenderpanel")
+                  ? node
+                  : node.querySelector("ingamerenderpanel");
+              if (matchPanel) {
+                console.log("L4D2 Enhanced: Match result panel detected");
+                window.L4D2MatchHistory.captureMatch(matchPanel);
+              }
             }
           }
         });
@@ -340,6 +363,13 @@ function startDOMObserver() {
   document.querySelectorAll(".btn-grey").forEach(fixButton);
   document.querySelectorAll(".chat-content__lobby").forEach(highlightStatus);
   document.querySelectorAll(".header__logo img").forEach(fixLogo);
+
+  // Check if match panel already exists on page load
+  const existingPanel = document.querySelector("ingamerenderpanel");
+  if (existingPanel && window.L4D2MatchHistory) {
+    console.log("L4D2 Enhanced: Match result panel found on page load");
+    window.L4D2MatchHistory.captureMatch(existingPanel);
+  }
 }
 
 function processNode(node) {

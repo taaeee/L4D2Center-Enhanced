@@ -619,8 +619,12 @@
       }
 
       @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
       }
     </style>
   </head>
@@ -803,17 +807,23 @@
 
       <!-- Update Banner -->
       <div class="update-banner" id="updateBanner">
-        <div class="update-banner-title">🎉 Nueva versión disponible</div>
+        <div class="update-banner-title">🎉 New version available</div>
         <div class="update-banner-version" id="updateVersion"></div>
         <div class="update-banner-notes" id="updateNotes"></div>
-        <button class="update-download-btn" id="updateDownloadBtn">⬇ Descargar</button>
+        <button class="update-download-btn" id="updateDownloadBtn">
+          ⬇ Download
+        </button>
       </div>
 
       <div class="footer">
         <p>
-          <span class="version-link" id="versionLink" title="Ver changelog">L4D2 Center Enhanced v<span id="currentVersion">1.1</span></span>
+          <span class="version-link" id="versionLink" title="Ver changelog"
+            >L4D2 Center Enhanced v<span id="currentVersion">1.1</span></span
+          >
         </p>
-        <button class="check-update-btn" id="checkUpdateBtn">Buscar actualizaciones</button>
+        <button class="check-update-btn" id="checkUpdateBtn">
+          Check for updates
+        </button>
       </div>
     </div>
 
@@ -825,7 +835,7 @@
           <button class="changelog-close" id="changelogClose">&times;</button>
         </div>
         <div class="changelog-body" id="changelogBody">
-          <div class="changelog-loading">Cargando...</div>
+          <div class="changelog-loading">Loading...</div>
         </div>
       </div>
     </div>

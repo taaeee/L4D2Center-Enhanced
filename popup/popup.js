@@ -447,7 +447,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Check for update banner
   let storedUpdateUrl = "";
   chrome.storage.local.get(
-    ["updateAvailable", "updateVersion", "updateUrl", "updateNotes", "showWhatsNew"],
+    [
+      "updateAvailable",
+      "updateVersion",
+      "updateUrl",
+      "updateNotes",
+      "showWhatsNew",
+    ],
     (result) => {
       if (result.updateAvailable && result.updateVersion) {
         storedUpdateUrl = result.updateUrl || "";
@@ -483,24 +489,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     chrome.runtime.sendMessage({ type: "checkForUpdate" }, (response) => {
       if (response && response.hasUpdate) {
-        chrome.storage.local.get(["updateVersion", "updateUrl", "updateNotes"], (data) => {
-          storedUpdateUrl = data.updateUrl || "";
-          updateVersionEl.textContent = `v${data.updateVersion}`;
-          updateNotesEl.textContent = truncateNotes(data.updateNotes || "");
-          updateBanner.classList.add("visible");
-          checkUpdateBtn.textContent = "¡Actualización encontrada!";
-          checkUpdateBtn.style.color = "#4caf50";
-          checkUpdateBtn.style.borderColor = "#4caf50";
-        });
+        chrome.storage.local.get(
+          ["updateVersion", "updateUrl", "updateNotes"],
+          (data) => {
+            storedUpdateUrl = data.updateUrl || "";
+            updateVersionEl.textContent = `v${data.updateVersion}`;
+            updateNotesEl.textContent = truncateNotes(data.updateNotes || "");
+            updateBanner.classList.add("visible");
+            checkUpdateBtn.textContent = "✓ Update found!";
+            checkUpdateBtn.style.color = "#4caf50";
+            checkUpdateBtn.style.borderColor = "#4caf50";
+          }
+        );
       } else {
-        checkUpdateBtn.textContent = "✓ Estás al día";
+        checkUpdateBtn.textContent = "✓ You're all up to date";
         checkUpdateBtn.style.color = "#4caf50";
         checkUpdateBtn.style.borderColor = "#4caf50";
       }
 
       setTimeout(() => {
         checkUpdateBtn.disabled = false;
-        checkUpdateBtn.textContent = "Buscar actualizaciones";
+        checkUpdateBtn.textContent = "Check for updates";
         checkUpdateBtn.style.color = "";
         checkUpdateBtn.style.borderColor = "";
       }, 3000);
@@ -522,12 +531,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function openChangelog() {
     changelogOverlay.classList.add("visible");
-    changelogBody.innerHTML = '<div class="changelog-loading">Cargando changelog...</div>';
+    changelogBody.innerHTML =
+      '<div class="changelog-loading">Loading changelog...</div>';
 
     chrome.runtime.sendMessage({ type: "getChangelog" }, (releases) => {
       if (!releases || releases.length === 0) {
         changelogBody.innerHTML =
-          '<div class="changelog-empty">No hay releases disponibles aún.</div>';
+          '<div class="changelog-empty">No releases available yet.</div>';
         return;
       }
 
@@ -546,11 +556,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
         el.innerHTML = `
           <div class="changelog-release-header">
-            <span class="changelog-release-version">v${escapeHtml(release.version)}</span>
+            <span class="changelog-release-version">v${escapeHtml(
+              release.version
+            )}</span>
             <span class="changelog-release-date">${escapeHtml(dateStr)}</span>
           </div>
-          ${release.name !== release.version ? `<div class="changelog-release-name">${escapeHtml(release.name)}</div>` : ""}
-          <div class="changelog-release-notes">${escapeHtml(release.notes || "Sin notas.")}</div>
+          ${
+            release.name !== release.version
+              ? `<div class="changelog-release-name">${escapeHtml(
+                  release.name
+                )}</div>`
+              : ""
+          }
+          <div class="changelog-release-notes">${escapeHtml(
+            release.notes || "No notes."
+          )}</div>
         `;
 
         changelogBody.appendChild(el);
