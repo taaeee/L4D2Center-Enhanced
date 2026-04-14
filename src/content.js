@@ -337,15 +337,39 @@ function startDOMObserver() {
                 );
             }
 
-            // Match History - Detect match result panel
+            // Match History - Detect "Close Panel" button (GameResultSeenButton)
+            // This button only appears when the game has ended and final data is ready
             if (window.L4D2MatchHistory) {
-              const matchPanel =
-                node.matches("ingamerenderpanel")
+              const closeBtn =
+                node.matches?.('a[onclick*="GameResultSeenButton"]')
                   ? node
-                  : node.querySelector("ingamerenderpanel");
-              if (matchPanel) {
-                console.log("L4D2 Enhanced: Match result panel detected");
-                window.L4D2MatchHistory.captureMatch(matchPanel);
+                  : node.querySelector?.('a[onclick*="GameResultSeenButton"]');
+              if (closeBtn) {
+                console.log("L4D2 Enhanced: Game result Close Panel button detected — hooking capture");
+                closeBtn.addEventListener("click", () => {
+                  const matchPanel = document.querySelector("ingamerenderpanel");
+                  if (matchPanel) {
+                    console.log("L4D2 Enhanced: Capturing final match data on Close Panel click");
+                    window.L4D2MatchHistory.captureMatch(matchPanel);
+                  }
+                });
+              }
+
+              // Fallback: also detect "Game Ended" text in case Close Panel button is missed
+              if (node.textContent && node.textContent.includes("Game Ended")) {
+                const matchPanel = document.querySelector("ingamerenderpanel");
+                if (matchPanel && !matchPanel.dataset.l4d2HistoryCaptured) {
+                  matchPanel.dataset.l4d2HistoryCaptured = "pending";
+                  console.log("L4D2 Enhanced: 'Game Ended' text detected — scheduling capture");
+                  // Small delay to ensure all final data has rendered
+                  setTimeout(() => {
+                    if (matchPanel.dataset.l4d2HistoryCaptured === "pending") {
+                      matchPanel.dataset.l4d2HistoryCaptured = "done";
+                      console.log("L4D2 Enhanced: Capturing final match data (Game Ended fallback)");
+                      window.L4D2MatchHistory.captureMatch(matchPanel);
+                    }
+                  }, 2000);
+                }
               }
             }
           }
@@ -364,11 +388,17 @@ function startDOMObserver() {
   document.querySelectorAll(".chat-content__lobby").forEach(highlightStatus);
   document.querySelectorAll(".header__logo img").forEach(fixLogo);
 
-  // Check if match panel already exists on page load
-  const existingPanel = document.querySelector("ingamerenderpanel");
-  if (existingPanel && window.L4D2MatchHistory) {
-    console.log("L4D2 Enhanced: Match result panel found on page load");
-    window.L4D2MatchHistory.captureMatch(existingPanel);
+  // Check if Close Panel button already exists on page load (game already ended)
+  const existingCloseBtn = document.querySelector('a[onclick*="GameResultSeenButton"]');
+  if (existingCloseBtn && window.L4D2MatchHistory) {
+    console.log("L4D2 Enhanced: Close Panel button found on page load — hooking capture");
+    existingCloseBtn.addEventListener("click", () => {
+      const matchPanel = document.querySelector("ingamerenderpanel");
+      if (matchPanel) {
+        console.log("L4D2 Enhanced: Capturing final match data on Close Panel click (page load)");
+        window.L4D2MatchHistory.captureMatch(matchPanel);
+      }
+    });
   }
 }
 

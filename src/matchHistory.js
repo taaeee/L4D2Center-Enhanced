@@ -212,10 +212,26 @@ const MatchHistory = {
     console.log("L4D2 Enhanced: MatchHistory - Match saved with ID:", matchId);
 
     if (data.players.length > 0) {
+      // Upsert unique players into the players table (name + mmr updated on each match)
+      const playerUpserts = data.players.map((p) => ({
+        steam_id: p.steamId,
+        player_name: p.playerName,
+        last_mmr: p.mmr,
+        updated_at: new Date().toISOString(),
+      }));
+
+      const { error: upsertError } = await this.supabase
+        .from("players")
+        .upsert(playerUpserts, { onConflict: "steam_id" });
+
+      if (upsertError) {
+        console.warn("L4D2 Enhanced: MatchHistory - Players upsert error:", upsertError);
+      }
+
+      // Insert match_players (no player_name — it lives in the players table)
       const playerRows = data.players.map((p) => ({
         match_id: matchId,
         steam_id: p.steamId,
-        player_name: p.playerName,
         team: p.team,
         mmr: p.mmr,
       }));
@@ -333,7 +349,7 @@ const MatchHistory = {
       // Load matches with players
       const { data: matches, error, count } = await this.supabase
         .from("match_history")
-        .select("*, match_players(*)", { count: "exact" })
+        .select("*, match_players(*, players(player_name))", { count: "exact" })
         .eq("user_steamid", this.currentUser)
         .order("created_at", { ascending: false })
         .range(offset, offset + this.HISTORY_PAGE_SIZE - 1);
@@ -501,7 +517,7 @@ const MatchHistory = {
           <ul class="mh-card__players">
             ${survivors.map((p) => `
               <li>
-                <a href="/profile/?steam_id=${this.esc(p.steam_id)}" target="_blank" class="mh-player-link">${this.esc(p.player_name || p.steam_id)}</a>
+                <a href="/profile/?steam_id=${this.esc(p.steam_id)}" target="_blank" class="mh-player-link">${this.esc(p.players?.player_name || p.player_name || p.steam_id)}</a>
                 <span class="mh-player-mmr">${p.mmr || "?"}</span>
               </li>
             `).join("")}
@@ -512,7 +528,7 @@ const MatchHistory = {
           <ul class="mh-card__players">
             ${infected.map((p) => `
               <li>
-                <a href="/profile/?steam_id=${this.esc(p.steam_id)}" target="_blank" class="mh-player-link">${this.esc(p.player_name || p.steam_id)}</a>
+                <a href="/profile/?steam_id=${this.esc(p.steam_id)}" target="_blank" class="mh-player-link">${this.esc(p.players?.player_name || p.player_name || p.steam_id)}</a>
                 <span class="mh-player-mmr">${p.mmr || "?"}</span>
               </li>
             `).join("")}
@@ -521,7 +537,7 @@ const MatchHistory = {
       </div>
 
       <div class="mh-card__footer">
-        <span class="mh-card__game-id">ID: ${this.esc(match.game_id || "")}</span>
+        <a href="https://l4d2center.com/demos/?search=${encodeURIComponent(match.game_id || "")}" target="_blank" rel="noopener noreferrer" class="mh-card__demo-btn">▶ View Demo</a>
       </div>
     `;
 

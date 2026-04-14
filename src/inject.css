@@ -1152,10 +1152,29 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.mh-card__game-id {
-  font-size: 10px;
-  color: #555;
-  font-family: monospace;
+.mh-card__demo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #fff;
+  background: linear-gradient(180deg, #7c4dff 0%, #651fff 100%);
+  border: none;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.1s, box-shadow 0.2s;
+  letter-spacing: 0.3px;
+}
+
+.mh-card__demo-btn:hover {
+  filter: brightness(1.2);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(124, 77, 255, 0.35);
+  color: #fff;
 }
 
 /* Modal footer */
