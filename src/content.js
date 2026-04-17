@@ -94,7 +94,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "triggerLogin") {
     // Popup/background asked us to trigger the anticheat login on this page
-    const btn = document.getElementById("anticheat-header-btn");
+    const btn = document.getElementById("anticheat-panel-btn") || document.getElementById("anticheat-header-btn");
     if (btn) {
       triggerAnticheatLogin(btn);
     } else {
@@ -200,19 +200,17 @@ function setAnticheatBtnState(btn, text, disabled) {
 }
 
 function injectAnticheatButton() {
-  if (document.getElementById("anticheat-header-btn")) return;
+  if (document.getElementById("anticheat-panel-btn")) return;
 
-  const headerContainer =
-    document.querySelector(".header__nav") ||
-    document.querySelector(".header__right") ||
-    document.querySelector(".header__wrap");
-  if (!headerContainer) return;
+  // Only inject into the personal panel
+  const panelContainer = document.querySelector(".personal__right");
+  if (!panelContainer) return;
 
   const btn = document.createElement("button");
-  btn.id = "anticheat-header-btn";
+  btn.id = "anticheat-panel-btn";
   btn.type = "button";
   btn.title = "Launch Anticheat & Login";
-  btn.className = "anticheat-header-btn";
+  btn.className = "anticheat-panel-btn";
   setAnticheatBtnState(btn, "Anticheat", false);
 
   btn.addEventListener("click", () => {
@@ -246,8 +244,8 @@ function injectAnticheatButton() {
     });
   });
 
-  headerContainer.appendChild(btn);
-  console.log("L4D2 Enhanced: Anticheat button injected");
+  panelContainer.appendChild(btn);
+  console.log("L4D2 Enhanced: Anticheat button injected into personal panel");
 }
 
 function triggerAnticheatLogin(btn) {
@@ -317,10 +315,10 @@ function startDOMObserver() {
               .forEach(highlightStatus);
             node.querySelectorAll(".header__logo img").forEach(fixLogo);
 
-            // Try to inject anticheat button if header appeared
+            // Try to inject anticheat & history buttons when personal panel appears
             if (
-              node.matches(".header__right, .header__nav, .header__wrap") ||
-              node.querySelector(".header__right, .header__nav, .header__wrap")
+              node.matches?.(".personal, .personal__right") ||
+              node.querySelector?.(".personal__right")
             ) {
               injectAnticheatButton();
               if (window.L4D2MatchHistory) {
