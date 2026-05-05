@@ -64,6 +64,12 @@ window.addEventListener("message", (event) => {
     console.log("L4D2 Enhanced: Processing ANTICHEAT_LOGIN_REQUEST");
     performAnticheatLogin();
   }
+
+  // --- Queue Scan ---
+  if (data.type === "L4D2_QUEUE_SCAN_REQUEST") {
+    console.log("L4D2 Enhanced: Processing QUEUE_SCAN_REQUEST");
+    performQueueScan();
+  }
 });
 
 // --- Minimal Protobuf Decoder for AntiCheatToken ---
@@ -210,6 +216,115 @@ function performAnticheatLogin() {
 
   xhr.send();
   console.log("L4D2 Enhanced: Anticheat API request sent to", fullUrl);
+}
+
+// --- Queue Scan for Queue Monitor ---
+async function performQueueScan() {
+  const PAGE_SIZE = 100;
+  const DELAY_MS = 500;
+  let queuePlayers = [];
+
+  function sleep(ms) {
+    return new Promise((r) => setTimeout(r, ms));
+  }
+
+  function fetchProto(params) {
+    return new Promise((resolve, reject) => {
+      let xhr = new XMLHttpRequest();
+      let full = `https://${sAPIdomain}/v2/getplayers?`;
+
+      for (const [k, v] of Object.entries(params)) {
+        full += `${k}=${encodeURIComponent(v)}&`;
+      }
+
+      const csrf = localStorage.getItem("auth3");
+      if (csrf) full += `csrf=${encodeURIComponent(csrf)}`;
+
+      xhr.open("GET", full, true);
+      xhr.responseType = "arraybuffer";
+      xhr.withCredentials = true;
+      xhr.timeout = 5000;
+
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          resolve(new Uint8Array(xhr.response));
+        } else reject(xhr.status);
+      };
+
+      xhr.onerror = () => reject("network");
+      xhr.ontimeout = () => reject("timeout");
+      xhr.send();
+    });
+  }
+
+  try {
+    let firstBytes = await fetchProto({ low: 0, high: 99, type: "main" });
+    let firstObj = PlayerList.toObject(PlayerList.decode(firstBytes), {
+      longs: String,
+      defaults: true,
+    });
+
+    let totalPlayers = firstObj.TotalPlayers;
+    let inQueueCount = firstObj.Count.in_queue;
+    let totalPages = Math.ceil(totalPlayers / PAGE_SIZE);
+
+    queuePlayers.push(...firstObj.List.filter((p) => p.IsInQueue));
+
+    for (let page = 1; page < totalPages; page++) {
+      let low = page * PAGE_SIZE;
+      let high = low + PAGE_SIZE - 1;
+
+      try {
+        let bytes = await fetchProto({ low: low, high: high, type: "main" });
+        let obj = PlayerList.toObject(PlayerList.decode(bytes), {
+          longs: String,
+          defaults: true,
+        });
+        let found = obj.List.filter((p) => p.IsInQueue);
+        if (found.length) {
+          queuePlayers.push(...found);
+        }
+      } catch (e) {
+        console.warn("L4D2 Enhanced: Queue scan page error", page, e);
+      }
+
+      await sleep(DELAY_MS);
+    }
+
+    // Map to a clean serializable format
+    const players = queuePlayers.map((p) => ({
+      Nickname: p.Nickname || "",
+      SteamID64: p.SteamID64 || "",
+      Mmr: p.Mmr || 0,
+      IsInGame: p.IsInGame || false,
+      IsInQueue: p.IsInQueue || false,
+      PartyCode: p.PartyCode || "",
+      PartyMembersCount: p.PartyMembersCount || 0,
+      Avatar: p.Avatar || "",
+    }));
+
+    window.postMessage(
+      {
+        type: "L4D2_QUEUE_SCAN_RESPONSE",
+        success: true,
+        players: players,
+        totalPlayers: totalPlayers,
+        inQueueCount: inQueueCount,
+      },
+      "*"
+    );
+  } catch (e) {
+    console.error("L4D2 Enhanced: Queue scan failed", e);
+    window.postMessage(
+      {
+        type: "L4D2_QUEUE_SCAN_RESPONSE",
+        success: false,
+        error: String(e),
+        players: [],
+      },
+      "*"
+    );
+  }
 }
 
 console.log("L4D2 Center Enhanced: Message listener registered");

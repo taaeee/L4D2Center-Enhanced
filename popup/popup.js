@@ -583,4 +583,112 @@ document.addEventListener("DOMContentLoaded", () => {
     div.textContent = str;
     return div.innerHTML;
   }
+
+  // --- Avoid List ---
+  const avoidListContainer = document.getElementById("avoidListContainer");
+  const avoidAddInput = document.getElementById("avoidAddInput");
+  const avoidAddBtn = document.getElementById("avoidAddBtn");
+
+  function renderAvoidList(list) {
+    if (!avoidListContainer) return;
+
+    if (!list || list.length === 0) {
+      avoidListContainer.innerHTML =
+        '<div class="avoid-empty">No hay jugadores en la avoid list</div>';
+      return;
+    }
+
+    avoidListContainer.innerHTML = "";
+    list.forEach((player) => {
+      const item = document.createElement("div");
+      item.className = "avoid-item";
+
+      const addedDate = player.addedAt
+        ? new Date(player.addedAt).toLocaleDateString("es-MX", {
+            day: "numeric",
+            month: "short",
+          })
+        : "";
+
+      item.innerHTML = `
+        <div class="avoid-item__info">
+          <div class="avoid-item__name">${escapeHtml(player.nickname)}</div>
+          <div class="avoid-item__steamid">${escapeHtml(
+            player.steamId64
+          )} · ${addedDate}</div>
+        </div>
+        <button class="avoid-item__remove" title="Quitar de avoid list">×</button>
+      `;
+
+      item.querySelector(".avoid-item__remove").addEventListener("click", () => {
+        removeFromAvoidList(player.steamId64);
+      });
+
+      avoidListContainer.appendChild(item);
+    });
+  }
+
+  function removeFromAvoidList(steamId64) {
+    chrome.storage.local.get(["avoidList"], (result) => {
+      const list = (result.avoidList || []).filter(
+        (p) => p.steamId64 !== steamId64
+      );
+      chrome.storage.local.set({ avoidList: list });
+      renderAvoidList(list);
+    });
+  }
+
+  // Load avoid list on popup open
+  chrome.storage.local.get(["avoidList"], (result) => {
+    renderAvoidList(result.avoidList || []);
+  });
+
+  // Add player to avoid list
+  if (avoidAddBtn && avoidAddInput) {
+    avoidAddBtn.addEventListener("click", () => {
+      const steamId = avoidAddInput.value.trim();
+      if (!steamId) return;
+
+      if (!/^\d{17}$/.test(steamId)) {
+        avoidAddInput.style.borderColor = "#ff6b6b";
+        setTimeout(() => (avoidAddInput.style.borderColor = ""), 2000);
+        return;
+      }
+
+      chrome.storage.local.get(["avoidList"], (result) => {
+        const list = result.avoidList || [];
+
+        if (list.find((p) => p.steamId64 === steamId)) {
+          avoidAddInput.style.borderColor = "#ff9800";
+          setTimeout(() => (avoidAddInput.style.borderColor = ""), 2000);
+          return;
+        }
+
+        // Ask for a nickname
+        const nickname = prompt("Nickname para este jugador (opcional):") || steamId;
+
+        list.push({
+          steamId64: steamId,
+          nickname: nickname,
+          addedAt: Date.now(),
+        });
+
+        chrome.storage.local.set({ avoidList: list });
+        renderAvoidList(list);
+        avoidAddInput.value = "";
+      });
+    });
+
+    // Enter key support
+    avoidAddInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") avoidAddBtn.click();
+    });
+  }
+
+  // Listen for avoid list changes (from content script)
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === "local" && changes.avoidList) {
+      renderAvoidList(changes.avoidList.newValue || []);
+    }
+  });
 });

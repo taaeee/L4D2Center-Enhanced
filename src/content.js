@@ -71,6 +71,13 @@ function init() {
       window.L4D2MatchHistory.injectHistoryButton();
     }, 1500);
   }
+
+  // Initialize Queue Monitor
+  if (window.L4D2QueueMonitor) {
+    setTimeout(() => {
+      window.L4D2QueueMonitor.init();
+    }, 2000);
+  }
 }
 
 // Listen for changes from the popup
@@ -303,6 +310,15 @@ function startDOMObserver() {
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === "childList") {
+        // Detect queue section removal (user left queue) -> show queue monitor
+        if (window.L4D2QueueMonitor) {
+          mutation.removedNodes.forEach((node) => {
+            if (node.nodeType === 1 && (node.matches?.(".queue") || node.querySelector?.(".queue"))) {
+              window.L4D2QueueMonitor.setPanelVisibility(true);
+            }
+          });
+        }
+
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === 1) {
             // Element
@@ -333,6 +349,23 @@ function startDOMObserver() {
                 .forEach((item) =>
                   window.L4D2Invitations.injectInviteButton(item)
                 );
+            }
+
+            // Avoid Buttons in player list
+            if (window.L4D2QueueMonitor) {
+              node
+                .querySelectorAll(".chat-content__item")
+                .forEach((item) =>
+                  window.L4D2QueueMonitor.injectAvoidButton(item)
+                );
+            }
+
+            // Hide queue monitor when user enters queue
+            if (window.L4D2QueueMonitor) {
+              const queuePanel = node.matches?.(".queue") ? node : node.querySelector?.(".queue");
+              if (queuePanel) {
+                window.L4D2QueueMonitor.setPanelVisibility(false);
+              }
             }
 
             // Match History - Detect "Close Panel" button (GameResultSeenButton)
@@ -386,6 +419,18 @@ function startDOMObserver() {
   document.querySelectorAll(".chat-content__lobby").forEach(highlightStatus);
   document.querySelectorAll(".header__logo img").forEach(fixLogo);
 
+  // Initial avoid button injection
+  if (window.L4D2QueueMonitor) {
+    document.querySelectorAll(".chat-content__item").forEach((item) =>
+      window.L4D2QueueMonitor.injectAvoidButton(item)
+    );
+  }
+
+  // Initial queue visibility check: hide panel if already in queue
+  if (window.L4D2QueueMonitor && document.querySelector(".queue")) {
+    window.L4D2QueueMonitor.setPanelVisibility(false);
+  }
+
   // Check if Close Panel button already exists on page load (game already ended)
   const existingCloseBtn = document.querySelector('a[onclick*="GameResultSeenButton"]');
   if (existingCloseBtn && window.L4D2MatchHistory) {
@@ -412,6 +457,15 @@ function processNode(node) {
     node.matches(".chat-content__item")
   ) {
     window.L4D2Invitations.injectInviteButton(node);
+  }
+
+  // Inject avoid button into player list items
+  if (
+    window.L4D2QueueMonitor &&
+    node.matches &&
+    node.matches(".chat-content__item")
+  ) {
+    window.L4D2QueueMonitor.injectAvoidButton(node);
   }
 }
 
