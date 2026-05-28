@@ -258,6 +258,8 @@ body.custom-theme .private-footer__btn {
   align-items: center !important;
   gap: 6px !important;
   width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* Avatar */
@@ -265,6 +267,8 @@ body.custom-theme .private-footer__btn {
   width: 52px !important;
   height: 52px !important;
   flex-shrink: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .private-main__img div {
@@ -923,10 +927,9 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
 
 /* === NOTIFICATION CENTER (Top-Right Bell) === */
 #l4d2-notif-center {
-  position: fixed;
-  top: 14px;
-  right: 14px;
-  z-index: 10001;
+  position: relative;
+  margin-left: 12px;
+  z-index: 1000;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -1155,10 +1158,9 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   border: none;
 }
 
-.invite-btn img {
+.invite-btn svg {
   width: 14px;
   height: 14px;
-  filter: sepia(100%) hue-rotate(180deg) saturate(300%) brightness(30%) contrast(120%);
   flex-shrink: 0;
 }
 
@@ -1177,69 +1179,159 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px;
-  background: transparent;
-  border-radius: 4px;
-  margin-right: 4px;
   cursor: pointer;
-  user-select: none;
-  transition: transform 0.1s, filter 0.2s;
+  padding: 4px;
+  border-radius: 4px;
+  color: var(--l4d2-text-color, #e1e2e8);
+  background: var(--l4d2-border-color, #3d4147);
+  transition: all 0.2s;
 }
 
-.add-friend-btn img {
+.add-friend-btn svg {
   width: 16px;
   height: 16px;
-  filter: brightness(0) invert(1);
   display: block;
 }
 
 .add-friend-btn:hover {
   transform: scale(1.15);
 }
-
 /* === FRIENDS SECTION === */
-.friends-section {
-  margin-bottom: 15px;
-  border-radius: 10px;
-  overflow: hidden;
-  background: var(--l4d2-top-color, #2d2d2d);
-}
-
-.friends-section .chat__head {
-  border-bottom: 1px solid var(--l4d2-border-color, #3d3d3d);
-  padding: 15px 20px;
-  font-weight: 600;
-  font-size: 18px;
-  background: var(--l4d2-top-color, #2d2d2d);
-}
-
-.friends-section .chat__head__header {
-  color: var(--l4d2-accent1, #ff9800);
+/* === FRIENDS DROPDOWN & TOGGLE BUTTON === */
+.friends-toggle-btn {
+  position: relative;
+  margin-left: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--l4d2-top-color, #1d2024);
+  border: none;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--l4d2-text-color, #e1e2e8);
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.friends-toggle-btn:hover {
+  background: var(--l4d2-border-color, #44474f);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.friends-toggle-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.friends-toggle-icon {
+  width: 24px;
+  height: 24px;
+  filter: brightness(0) invert(1);
+}
+
+.friends-toggle-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  background: #f44336;
+  color: white;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-shadow: 0 2px 6px rgba(244, 67, 54, 0.4);
+}
+
+.friends-dropdown-panel {
+  display: none;
+  position: absolute;
+  top: 68px;
+  right: 16px;
+  width: 380px;
+  background: var(--l4d2-top-color, #1d2024);
+  border: 1px solid var(--l4d2-border-color, #44474f);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 1001;
+  overflow: hidden;
+}
+
+.friends-dropdown-panel--open {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.friends-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--l4d2-border-color, #3d3d3d);
+  background: var(--l4d2-bg-color, #1a1a1a);
+}
+
+.friends-panel__title {
+  color: var(--l4d2-accent1, #ff9800);
+  font-weight: 600;
+  font-size: 16px;
 }
 
 .add-friend-manual-btn {
-  margin-left: auto;
+  background: var(--l4d2-border-color, #44474f) !important;
+  border-radius: 50% !important;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-.friends-icon {
-  width: 18px;
-  height: 18px;
-  color: white;
-  filter: invert(67%) saturate(1000%) hue-rotate(360deg) brightness(103%)
-    contrast(105%);
+.add-friend-manual-btn:hover {
+  background: var(--l4d2-accent1, #ff9800) !important;
 }
 
-.friends-section .chat__main {
-  background: var(--l4d2-top-color, #2d2d2d);
-  max-height: 200px;
+.add-friend-manual-btn img {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.friends-panel__main {
+  max-height: 350px;
   overflow-y: auto;
 }
 
+.friends-panel__main::-webkit-scrollbar {
+  width: 5px;
+}
+
+.friends-panel__main::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.friends-panel__main::-webkit-scrollbar-thumb {
+  background: var(--l4d2-border-color, #44474f);
+  border-radius: 3px;
+}
+
 .friends-empty {
-  padding: 24px;
+  padding: 30px 20px;
   text-align: center;
   color: #888;
   font-style: italic;
@@ -1302,20 +1394,20 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
 }
 
 .friend-action-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2px;
-  background: transparent;
+  width: 24px;
+  height: 24px;
   border-radius: 4px;
   cursor: pointer;
+  color: var(--l4d2-text-color, #e1e2e8);
   transition: transform 0.1s;
 }
 
-.friend-action-btn img {
+.friend-action-btn svg {
   width: 16px;
   height: 16px;
-  filter: brightness(0) invert(1);
   display: block;
 }
 
@@ -1898,15 +1990,16 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
 }
 
 /* ================================================
-   QUEUE MONITOR PANEL — Material You Design
+   QUEUE MONITOR PANEL — Players Tab Design
    ================================================ */
 
-.queue-monitor {
-  margin-top: 16px;
-  border-radius: 16px;
-  overflow: hidden;
-  background: var(--l4d2-top-color, #2d2d2d);
-  border: 1px solid var(--l4d2-border-color, #44474f);
+/* The panel reuses .chat.players structure for consistency.
+   These styles only add queue-monitor-specific behavior. */
+
+#l4d2-queue-monitor.queue-monitor-panel {
+  margin-top: 16px !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
   animation: qmFadeIn 0.3s ease;
 }
 
@@ -1915,32 +2008,37 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Header */
-.queue-monitor__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--l4d2-border-color, #44474f);
+/* Header — match the Players tab header style */
+#l4d2-queue-monitor .chat__head {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 15px 20px !important;
 }
 
-.queue-monitor__title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--l4d2-accent1, #a8c7fa);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+#l4d2-queue-monitor .chat__head__header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  color: var(--l4d2-accent1, #ff9800) !important;
+  font-weight: 600 !important;
+  font-size: 18px !important;
 }
 
-.queue-monitor__title svg {
+#l4d2-queue-monitor .chat__head__header svg {
   flex-shrink: 0;
   opacity: 0.9;
 }
 
-.queue-monitor__count {
+/* Right side of header — count + refresh */
+.qm-head-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Count badge — style like the Players tab counters */
+.qm-count-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1952,20 +2050,16 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   font-size: 11px;
   font-weight: 700;
   border-radius: 9999px;
+  margin-left: 4px;
 }
 
-.queue-monitor__actions {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
+/* Refresh button */
 .queue-monitor__refresh-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: transparent;
   border: 1px solid var(--l4d2-border-color, #44474f);
@@ -1987,7 +2081,7 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
 
 /* Status bar */
 .queue-monitor__status {
-  padding: 6px 18px;
+  padding: 6px 20px;
   font-size: 11px;
   color: var(--l4d2-text-color, #c4c6d0);
   opacity: 0.5;
@@ -2004,7 +2098,7 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 18px;
+  padding: 12px 20px;
   background: rgba(255, 68, 68, 0.12);
   border-bottom: 1px solid rgba(255, 68, 68, 0.25);
   color: #ffb4ab;
@@ -2018,27 +2112,27 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   color: #ff6b6b;
 }
 
-/* Player list */
-.queue-monitor__list {
-  max-height: 360px;
-  overflow-y: auto;
+#l4d2-queue-monitor .chat__main {
+  max-height: 380px;
+  overflow: hidden;
 }
 
-.queue-monitor__list::-webkit-scrollbar {
+#l4d2-queue-monitor .chat__main::-webkit-scrollbar {
   width: 5px;
 }
 
-.queue-monitor__list::-webkit-scrollbar-track {
+#l4d2-queue-monitor .chat__main::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.queue-monitor__list::-webkit-scrollbar-thumb {
+#l4d2-queue-monitor .chat__main::-webkit-scrollbar-thumb {
   background: var(--l4d2-border-color, #44474f);
   border-radius: 3px;
 }
 
+/* Empty state */
 .queue-monitor__empty {
-  padding: 28px 18px;
+  padding: 28px 20px;
   text-align: center;
   color: var(--l4d2-text-color, #c4c6d0);
   opacity: 0.4;
@@ -2046,81 +2140,107 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   font-style: italic;
 }
 
-/* Individual player row */
-.queue-monitor__item {
+/* ---- Player rows — reusing .chat-content__item structure ---- */
+
+/* Queue player row (matches the site's native player item style) */
+#l4d2-queue-monitor .chat-content__item.qm-player-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 14px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--l4d2-border-color, #3d3d3d);
   transition: background 0.2s ease;
-  gap: 8px;
+  gap: 10px;
 }
 
-.queue-monitor__item:last-child {
+#l4d2-queue-monitor .chat-content__item.qm-player-row:last-child {
   border-bottom: none;
 }
 
-.queue-monitor__item:hover {
+#l4d2-queue-monitor .chat-content__item.qm-player-row:hover {
   background: rgba(255, 255, 255, 0.03);
 }
 
 /* Avoided player highlight */
-.queue-monitor__item--avoided {
+#l4d2-queue-monitor .qm-player-row--avoided {
   background: rgba(255, 68, 68, 0.08) !important;
   border-left: 3px solid #ff6b6b;
 }
 
-.queue-monitor__item--avoided:hover {
+#l4d2-queue-monitor .qm-player-row--avoided:hover {
   background: rgba(255, 68, 68, 0.14) !important;
 }
 
-/* Player info (left side) */
-.queue-monitor__player-info {
+/* Left side — avatar + info */
+#l4d2-queue-monitor .chat-content__item_left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
   flex: 1;
 }
 
 /* Avatar */
-.queue-monitor__avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
+#l4d2-queue-monitor .chat-content__item_img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   object-fit: cover;
   border: 1px solid var(--l4d2-border-color, #3d3d3d);
   flex-shrink: 0;
   transition: border-color 0.2s, transform 0.15s;
 }
 
-.queue-monitor__item:hover .queue-monitor__avatar {
+#l4d2-queue-monitor .qm-player-row:hover .chat-content__item_img {
   border-color: var(--l4d2-accent1, #a8c7fa);
   transform: scale(1.05);
 }
 
-.queue-monitor__item--avoided .queue-monitor__avatar {
+#l4d2-queue-monitor .qm-player-row--avoided .chat-content__item_img {
   border-color: #ff6b6b;
 }
 
-.queue-monitor__name {
+/* Info block (name + meta) */
+#l4d2-queue-monitor .chat-content__item_info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Player name */
+#l4d2-queue-monitor .chat-content__item_name {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--l4d2-text-color, #e1e2e8);
   text-decoration: none;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   transition: color 0.15s;
+  display: block;
 }
 
-.queue-monitor__name:hover {
+#l4d2-queue-monitor .chat-content__item_name:hover {
   color: var(--l4d2-accent1, #a8c7fa);
 }
 
-.queue-monitor__item--avoided .queue-monitor__name {
+#l4d2-queue-monitor .qm-player-row--avoided .chat-content__item_name {
   color: #ffb4ab;
+}
+
+/* Meta row (status + badge + party) */
+#l4d2-queue-monitor .chat-content__item_meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+/* "In Queue" status text — reuse existing .inqueue style */
+#l4d2-queue-monitor .chat-content__lobby.inqueue {
+  font-size: 11px;
 }
 
 /* Avoid badge */
@@ -2152,55 +2272,261 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   flex-shrink: 0;
 }
 
-/* Player right side (MMR + action button) */
-.queue-monitor__player-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+/* Right side — MMR badge + action button container with transition options */
+#l4d2-queue-monitor .chat-content__item_right,
+.chat.players .chat-content__item_right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+  position: relative !important;
+}
+
+/* Ensure child elements don't wrap during transitions */
+#l4d2-queue-monitor .chat-content__item_right > *,
+.chat.players .chat-content__item_right > * {
+  white-space: nowrap !important;
+}
+
+/* 1. HIDE ALL ACTION BUTTONS by default (including dynamically injected ones like invite-btn, add-friend-btn, and qm-avoid-btn) */
+#l4d2-queue-monitor .chat-content__item_right > *:not(.queue-monitor__mmr):not(.qm-options-toggle),
+.chat.players .chat-content__item_right > *:not(.chat-content__status):not([class*="badge"]):not(.qm-options-toggle) {
+  opacity: 0 !important;
+  max-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-width: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  transform: scale(0.8) translateX(12px) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* 2. MMR badge / native status badge visible by default */
+.queue-monitor__mmr,
+.chat.players .chat-content__status,
+.chat.players [class*="badge"] {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  opacity: 1 !important;
+  max-width: 60px !important;
 }
 
 .queue-monitor__mmr {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--l4d2-accent1, #a8c7fa);
-  background: rgba(168, 199, 250, 0.1);
-  padding: 3px 10px;
-  border-radius: 9999px;
-  white-space: nowrap;
+  width: 54px !important;
+  height: 24px !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  letter-spacing: -0.015em !important;
+  color: #FFFFFF !important;
+  background: #2A2A2A !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  
+  /* Transition for hiding */
+  opacity: 1 !important;
+  max-width: 60px !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-/* Action buttons */
-.queue-monitor__action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: transparent;
-  border: 1px solid var(--l4d2-border-color, #44474f);
-  color: var(--l4d2-text-color, #c4c6d0);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 0;
-  font-family: inherit;
+/* When a rank badge is loaded as a background image, we clear original background styling */
+.queue-monitor__mmr.qm-badge {
+  background-color: transparent !important;
+  border-radius: 0 !important;
 }
 
-.queue-monitor__action-btn:hover {
-  transform: scale(1.1);
+/* Badge specific custom rules (e.g. Badge 9 uses black text & drop shadow matching the site) */
+.queue-monitor__mmr.qm-badge--9 {
+  color: #000000 !important;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6)) !important;
 }
 
-.queue-monitor__action-btn--avoid:hover {
-  background: rgba(255, 68, 68, 0.15);
-  border-color: #ff6b6b;
-  color: #ff6b6b;
+/* 3. SHOW OPTIONS ACTIVE STATE:
+   - Hide MMR badge / native status badge
+   - Reveal action buttons */
+#l4d2-queue-monitor .chat-content__item_right.qm-show-options .queue-monitor__mmr,
+.chat.players .chat-content__item_right.qm-show-options .chat-content__status,
+.chat.players .chat-content__item_right.qm-show-options [class*="badge"] {
+  opacity: 0 !important;
+  max-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: none !important;
+  transform: scale(0.8) !important;
+  overflow: hidden !important;
 }
 
-.queue-monitor__action-btn--remove:hover {
-  background: rgba(76, 175, 80, 0.15);
-  border-color: #4caf50;
-  color: #4caf50;
+#l4d2-queue-monitor .chat-content__item_right.qm-show-options > *:not(.queue-monitor__mmr):not(.qm-options-toggle),
+.chat.players .chat-content__item_right.qm-show-options > *:not(.chat-content__status):not([class*="badge"]):not(.qm-options-toggle) {
+  opacity: 1 !important;
+  max-width: 32px !important; /* Ensure uniform space for icons */
+  pointer-events: auto !important;
+  transform: scale(1) translateX(0) !important;
+  margin: 0 !important; /* Rely purely on container gap */
+}
+
+/* Unified Action Button styling when active */
+.chat-content__item_right.qm-show-options .invite-btn,
+.chat-content__item_right.qm-show-options .add-friend-btn,
+.chat-content__item_right.qm-show-options .qm-avoid-btn,
+.chat-content__item_right.qm-show-options .queue-monitor__action-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s, border-color 0.2s !important;
+  position: relative !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 0 !important; /* Hide text */
+  color: var(--l4d2-text-color, #c4c6d0) !important; /* SVGs inherit this color */
+  overflow: hidden !important;
+  gap: 0 !important; /* Prevent flex gap from pushing icon off-center */
+}
+
+/* Ensure the invite icon is visible on transparent background */
+.chat-content__item_right.qm-show-options .invite-btn img {
+  filter: brightness(0) invert(1) !important;
+  opacity: 0.7 !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Ensure other icons stay perfectly centered too */
+.chat-content__item_right.qm-show-options .add-friend-btn svg,
+.chat-content__item_right.qm-show-options .qm-avoid-btn svg,
+.chat-content__item_right.qm-show-options .queue-monitor__action-btn svg {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+
+.chat-content__item_right.qm-show-options .queue-monitor__action-btn:hover {
+  transform: scale(1.1) !important;
+}
+
+.chat-content__item_right.qm-show-options .queue-monitor__action-btn--avoid:hover,
+.chat-content__item_right.qm-show-options .qm-avoid-btn:hover {
+  background: rgba(255, 68, 68, 0.15) !important;
+}
+
+.chat-content__item_right.qm-show-options .queue-monitor__action-btn--remove:hover {
+  background: rgba(76, 175, 80, 0.15) !important;
+}
+
+.chat-content__item_right.qm-show-options .invite-btn:hover {
+  background: rgba(168, 199, 250, 0.15) !important;
+}
+
+.chat-content__item_right.qm-show-options .add-friend-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Options trigger menu button */
+.qm-options-toggle {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  border: 1px solid var(--l4d2-border-color, #44474f) !important;
+  color: var(--l4d2-text-color, #c4c6d0) !important;
+  cursor: pointer !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  padding: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+.qm-options-toggle:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: var(--l4d2-accent1, #a8c7fa) !important;
+  color: var(--l4d2-accent1, #a8c7fa) !important;
+}
+
+.qm-options-toggle svg {
+  transition: transform 0.25s ease !important;
+}
+
+/* Rotate and color red to signal "close" options drawer */
+#l4d2-queue-monitor .chat-content__item_right.qm-show-options .qm-options-toggle,
+.chat.players .chat-content__item_right.qm-show-options .qm-options-toggle {
+  transform: rotate(90deg) !important;
+  border-color: #ff6b6b !important;
+  color: #ff6b6b !important;
+}
+
+/* === ENFORCE EXACT BUTTON ORDER ("add friend", "invite", "avoid") === */
+.chat-content__item_right .add-friend-btn {
+  order: 1 !important;
+}
+.chat-content__item_right .invite-btn {
+  order: 2 !important;
+}
+.chat-content__item_right .queue-monitor__action-btn,
+.chat-content__item_right .qm-avoid-btn {
+  order: 3 !important;
+}
+.chat-content__item_right .queue-monitor__mmr,
+.chat-content__item_right .chat-content__status,
+.chat-content__item_right [class*="badge"] {
+  order: 4 !important;
+}
+.chat-content__item_right .qm-options-toggle {
+  order: 5 !important;
+}
+
+/* === UNIFY ALL ACTION BUTTON ICON SIZES === */
+.chat-content__item_right .qm-options-toggle svg,
+.chat-content__item_right .queue-monitor__action-btn svg,
+.chat-content__item_right .qm-avoid-btn svg,
+.chat-content__item_right .qm-avoid-btn__icon svg,
+.chat-content__item_right .invite-btn svg,
+.chat-content__item_right .add-friend-btn svg {
+  width: 24px !important;
+  height: 24px !important;
+  max-width: 24px !important;
+  max-height: 24px !important;
+  object-fit: contain !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+/* === NATIVE AVOID BUTTON LAYOUT WHEN OPTIONS OPEN === */
+.chat.players .chat-content__item_right.qm-show-options .qm-avoid-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  border: 1px solid var(--l4d2-border-color, #44474f) !important;
+  color: var(--l4d2-text-color, #c4c6d0) !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  margin-left: 2px !important;
+  margin-right: 2px !important;
+  transition: transform 0.2s, background-color 0.2s, border-color 0.2s, color 0.2s !important;
+}
+
+.chat.players .chat-content__item_right.qm-show-options .qm-avoid-btn:hover {
+  transform: scale(1.1) !important;
 }
 
 /* ================================================

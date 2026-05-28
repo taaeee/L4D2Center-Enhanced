@@ -28,8 +28,75 @@ let isAutoReadyEnabled = false;
 let autoReadyIntervalId = null;
 
 // --- Initialization ---
-function init() {
-  // Load settings from storage
+
+/**
+ * Waits for a condition to become truthy, polling at an interval.
+ * Returns a promise that resolves with the truthy value, or rejects on timeout.
+ */
+function waitFor(conditionFn, { timeout = 15000, interval = 200, label = "condition" } = {}) {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const check = () => {
+      const result = conditionFn();
+      if (result) {
+        console.log(`L4D2 Enhanced: ✓ ${label} ready`);
+        resolve(result);
+        return;
+      }
+      if (Date.now() - start > timeout) {
+        reject(new Error(`L4D2 Enhanced: ✗ Timeout waiting for ${label} (${timeout}ms)`));
+        return;
+      }
+      setTimeout(check, interval);
+    };
+    check();
+  });
+}
+
+/**
+ * Waits for the MAIN world interceptor to be injected and responding.
+ * Sends a ping and waits for a pong back.
+ */
+function waitForInterceptor(timeout = 10000) {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    let resolved = false;
+
+    const handler = (event) => {
+      if (event.data && event.data.type === "L4D2_INTERCEPTOR_PONG") {
+        resolved = true;
+        window.removeEventListener("message", handler);
+        console.log("L4D2 Enhanced: ✓ Interceptor responding");
+        resolve();
+      }
+    };
+
+    window.addEventListener("message", handler);
+
+    // Ping periodically until we get a pong
+    const pingInterval = setInterval(() => {
+      if (resolved) {
+        clearInterval(pingInterval);
+        return;
+      }
+      if (Date.now() - start > timeout) {
+        clearInterval(pingInterval);
+        window.removeEventListener("message", handler);
+        reject(new Error("L4D2 Enhanced: ✗ Interceptor not responding"));
+        return;
+      }
+      window.postMessage({ type: "L4D2_INTERCEPTOR_PING" }, "*");
+    }, 300);
+
+    // Send first ping immediately
+    window.postMessage({ type: "L4D2_INTERCEPTOR_PING" }, "*");
+  });
+}
+
+async function init() {
+  console.log("L4D2 Enhanced: Starting initialization...");
+
+  // Load settings from storage (non-blocking)
   chrome.storage.local.get(
     ["autoReady", "streamerMode", "customTheme", "themeColors"],
     (result) => {
@@ -40,44 +107,96 @@ function init() {
   );
 
   updateFavicon();
-  injectAnticheatButton();
   startDOMObserver();
 
-  // Initialize Invitations
-  if (window.L4D2Invitations) {
-    setTimeout(() => {
-      window.L4D2Invitations.init();
+  // Start waiting for dependencies in parallel, but do NOT block everything
+  const pPersonal = waitFor(() => document.querySelector(".personal__right"), {
+    label: "Personal panel (.personal__right)",
+    timeout: 20000,
+  });
+  const pUser = waitFor(() => document.querySelector('a[href*="profile/?steam_id="]'), {
+    label: "User profile link (user identity)",
+    timeout: 20000,
+  });
+  const pInterceptor = waitForInterceptor(15000);
 
-      // Check for Auto-Join URL Param
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("join_party");
-      if (code) {
-        window.L4D2Invitations.autoJoin(code);
+  // 1. Anticheat Button (needs personal panel)
+  pPersonal.then(() => {
+    injectAnticheatButton();
+  }).catch(e => console.warn(e.message));
 
-        // Clean URL (optional, to avoid re-triggering on refresh)
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname
-        );
+  // 2. Invitations (needs user identity)
+  pUser.then(async () => {
+    if (window.L4D2Invitations) {
+      try {
+        await window.L4D2Invitations.init();
+        console.log("L4D2 Enhanced: ✓ Invitations initialized");
+
+        // Check for Auto-Join URL Param
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get("join_party");
+        if (code) {
+          window.L4D2Invitations.autoJoin(code);
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      } catch (err) {
+        console.error("L4D2 Enhanced: ✗ Invitations init failed:", err);
       }
-    }, 1000);
-  }
+    } else {
+      console.warn("L4D2 Enhanced: ✗ L4D2Invitations module not found");
+    }
+  }).catch(e => console.warn(e.message));
 
-  // Initialize Match History
-  if (window.L4D2MatchHistory) {
-    setTimeout(() => {
-      window.L4D2MatchHistory.init();
-      window.L4D2MatchHistory.injectHistoryButton();
-    }, 1500);
-  }
+  // 3. Match History (needs user identity)
+  pUser.then(async () => {
+    if (window.L4D2MatchHistory) {
+      try {
+        window.L4D2MatchHistory.init();
+        // Wait for personal panel to inject the button
+        pPersonal.then(() => {
+          window.L4D2MatchHistory.injectHistoryButton();
+        }).catch(() => {});
+        console.log("L4D2 Enhanced: ✓ Match History initialized");
+      } catch (err) {
+        console.error("L4D2 Enhanced: ✗ Match History init failed:", err);
+      }
+    } else {
+      console.warn("L4D2 Enhanced: ✗ L4D2MatchHistory module not found");
+    }
+  }).catch(e => console.warn(e.message));
 
-  // Initialize Queue Monitor
+  // 4. Queue Monitor (needs DOM, optionally interceptor)
+  // We MUST wait for #playerpanel to exist so we can inject below it.
+  const pPlayerPanel = waitFor(() => document.getElementById("playerpanel"), {
+    label: "Player panel (#playerpanel)",
+    timeout: 20000,
+  });
+
   if (window.L4D2QueueMonitor) {
-    setTimeout(() => {
-      window.L4D2QueueMonitor.init();
-    }, 2000);
+    pPlayerPanel.then(() => {
+      try {
+        window.L4D2QueueMonitor.init();
+        console.log("L4D2 Enhanced: ✓ Queue Monitor initialized");
+      } catch (err) {
+        console.error("L4D2 Enhanced: ✗ Queue Monitor init failed:", err);
+      }
+    }).catch(e => console.warn(e.message));
+
+    pInterceptor.then(() => {
+      console.log("L4D2 Enhanced: Interceptor ready for Queue Monitor");
+      window.L4D2QueueMonitor.interceptorReady = true;
+      // If a scan is pending, trigger it now
+      if (window.L4D2QueueMonitor.pendingScan) {
+        window.L4D2QueueMonitor.startScan();
+      }
+    }).catch(e => {
+      console.warn("L4D2 Enhanced: Queue Monitor scanning may be degraded without interceptor:", e.message);
+    });
+  } else {
+    console.warn("L4D2 Enhanced: ✗ L4D2QueueMonitor module not found");
   }
+
+  console.log("L4D2 Enhanced: ✓ Initialization promises dispatched");
 }
 
 // Listen for changes from the popup
@@ -310,13 +429,14 @@ function startDOMObserver() {
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === "childList") {
-        // Detect queue section removal (user left queue) -> show queue monitor
-        if (window.L4D2QueueMonitor) {
-          mutation.removedNodes.forEach((node) => {
-            if (node.nodeType === 1 && (node.matches?.(".queue") || node.querySelector?.(".queue"))) {
-              window.L4D2QueueMonitor.setPanelVisibility(true);
-            }
-          });
+        // Ensure queue monitor panel is recreated if it's missing and we have the playerpanel
+        if (
+          window.L4D2QueueMonitor &&
+          !document.getElementById("l4d2-queue-monitor") &&
+          document.getElementById("playerpanel")
+        ) {
+          console.log("L4D2 Enhanced: Queue monitor panel missing, recreating...");
+          window.L4D2QueueMonitor.createPanel();
         }
 
         mutation.addedNodes.forEach((node) => {
@@ -324,7 +444,10 @@ function startDOMObserver() {
             // Element
             processNode(node);
 
-            // Recursion
+            // Clean up name spacing for party panel grid
+            if (node.matches?.(".private-main__name")) cleanPartyNameSpacing(node);
+            node.querySelectorAll(".private-main__name").forEach(cleanPartyNameSpacing);
+            
             node.querySelectorAll(".btn-grey").forEach(fixButton);
             node
               .querySelectorAll(".chat-content__lobby")
@@ -360,13 +483,7 @@ function startDOMObserver() {
                 );
             }
 
-            // Hide queue monitor when user enters queue
-            if (window.L4D2QueueMonitor) {
-              const queuePanel = node.matches?.(".queue") ? node : node.querySelector?.(".queue");
-              if (queuePanel) {
-                window.L4D2QueueMonitor.setPanelVisibility(false);
-              }
-            }
+            // (Queue monitor is now always visible)
 
             // Match History - Detect "Close Panel" button (GameResultSeenButton)
             // This button only appears when the game has ended and final data is ready
@@ -426,10 +543,7 @@ function startDOMObserver() {
     );
   }
 
-  // Initial queue visibility check: hide panel if already in queue
-  if (window.L4D2QueueMonitor && document.querySelector(".queue")) {
-    window.L4D2QueueMonitor.setPanelVisibility(false);
-  }
+  // (Queue monitor is now always visible)
 
   // Check if Close Panel button already exists on page load (game already ended)
   const existingCloseBtn = document.querySelector('a[onclick*="GameResultSeenButton"]');
@@ -486,6 +600,18 @@ function fixLogo(img) {
   if (img.src !== LOGO_URL) {
     img.src = LOGO_URL;
   }
+}
+
+// Strip hardcoded non-breaking spaces out of party names so flexbox centering works perfectly
+function cleanPartyNameSpacing(nameNode) {
+  nameNode.childNodes.forEach(child => {
+    // If it's a text node containing non-breaking spaces (\u00A0) or normal trailing spaces
+    if (child.nodeType === 3) {
+      if (child.textContent.includes('\u00A0') || child.textContent.trim() !== child.textContent) {
+        child.textContent = child.textContent.replace(/\u00A0/g, '').trim();
+      }
+    }
+  });
 }
 
 // Run

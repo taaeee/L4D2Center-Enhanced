@@ -19,6 +19,18 @@ const QueueMonitor = {
     key: "sb_publishable_x6a3UfdTi8NpEyqFqhL31A_ZS5RCjfg",
   },
 
+  // Rank badge system: https://l4d2center.com/images/badges/{1-9}.svg
+  BADGE_BASE_URL: "https://l4d2center.com/images/badges/",
+
+  // Get badge number (1-9) from MMR value
+  getBadgeNumber: function (mmr) {
+    const m = Number(mmr) || 0;
+    if (m < 2000) return 1;
+    if (m >= 9000) return 9;
+    // 2000-2999 → 2, 3000-3999 → 3, ... 8000-8999 → 8
+    return Math.floor(m / 1000);
+  },
+
   // Find avatar: cache → DOM → default
   findAvatar: function (steamId) {
     // 1. Check cache
@@ -77,7 +89,7 @@ const QueueMonitor = {
   // SVG Icons
   ICONS: {
     refresh: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>`,
-    avoid: `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9A7.902 7.902 0 014 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1A7.902 7.902 0 0120 12c0 4.42-3.58 8-8 8z"/></svg>`,
+    avoid: `<svg width="14" height="14" viewBox="0 0 416 472" fill="currentColor"><path fill="currentColor" d="M10 402q19 27 53 27h288q32 0 53-27q21-32 5-67l-75-162l-71-132Q247 7 208 7q-40 0-55 34L82 173L5 333q-13 39 5 69m36-47l75-160l70-133q6-12 19-12t19 12l69 133l76 162q9 14-2 23q-9 9-17 9H63q-8 0-17-9q-6-16 0-25m162-75q21 0 21-21v-86q0-21-21-21t-21 21v86q0 21 21 21m21 43q0 8-6 14.5t-15 6.5t-15-6.5t-6-14.5q0-9 6-15.5t15-6.5t15 6.5t6 15.5"/></svg>`,
     remove: `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`,
     warning: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>`,
     queue: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`,
@@ -173,6 +185,15 @@ const QueueMonitor = {
   // Start a queue scan via the interceptor
   startScan: function () {
     if (this.isScanning) return;
+    
+    // Ensure interceptor is ready before scanning
+    if (!this.interceptorReady) {
+      this.pendingScan = true;
+      this.updateScanStatus("Esperando interceptor...");
+      return;
+    }
+
+    this.pendingScan = false;
     this.isScanning = true;
     this.updateScanStatus("Escaneando...");
     window.postMessage({ type: "L4D2_QUEUE_SCAN_REQUEST" }, "*");
@@ -187,6 +208,16 @@ const QueueMonitor = {
       console.log(
         `L4D2 Enhanced: Queue scan complete — ${this.queuePlayers.length} players in queue`
       );
+
+      // Log MyParty for each player that has party members
+      this.queuePlayers.forEach((p) => {
+        if (p.MyParty && p.MyParty.length > 0) {
+          console.log(
+            `L4D2 Enhanced: MyParty of ${p.Nickname} (${p.SteamID64}):`,
+            p.MyParty
+          );
+        }
+      });
 
       // Check for avoided players
       const avoidedInQueue = this.queuePlayers.filter((p) =>
@@ -239,7 +270,7 @@ const QueueMonitor = {
     if (this.autoRefreshInterval) clearInterval(this.autoRefreshInterval);
     if (this.autoRefreshEnabled) {
       this.autoRefreshInterval = setInterval(() => {
-        // Only scan if not currently in queue (panel visible)
+        // Scan if the panel is visible (now visible even when searching for a game)
         if (this.panelVisible && !this.isScanning) {
           this.startScan();
         }
@@ -287,22 +318,31 @@ const QueueMonitor = {
 
     const panel = document.createElement("div");
     panel.id = "l4d2-queue-monitor";
-    panel.className = "queue-monitor";
+    panel.className = "chat players queue-monitor-panel";
     panel.innerHTML = this.getPanelHTML();
 
-    // Insert after the personal panel (left column)
-    const personalPanel = document.querySelector(".personal");
-    if (personalPanel && personalPanel.parentNode) {
-      personalPanel.parentNode.insertBefore(panel, personalPanel.nextSibling);
+    // Insert after the playerpanel
+    const playerPanel = document.getElementById("playerpanel");
+    if (playerPanel && playerPanel.parentNode) {
+      playerPanel.parentNode.insertBefore(panel, playerPanel.nextSibling);
+      console.log("L4D2 Enhanced: Appended Queue Monitor directly after #playerpanel");
     } else {
       // Fallback: try content__right area
-      const mainContent =
-        document.querySelector(".content__right") || document.body;
+      const mainContent = document.querySelector(".content__right") || document.body;
       mainContent.appendChild(panel);
+      console.log("L4D2 Enhanced: Appended Queue Monitor to fallback:", mainContent.className || mainContent.tagName);
     }
 
     this.panelVisible = true;
     this.bindPanelEvents();
+
+    // Render immediately if we already have players in memory
+    if (this.queuePlayers && this.queuePlayers.length > 0) {
+      this.renderPanel();
+    }
+
+    // Start a fresh scan to get latest data
+    this.startScan();
   },
 
   // Remove the panel
@@ -334,13 +374,15 @@ const QueueMonitor = {
   // Generate panel HTML
   getPanelHTML: function () {
     return `
-      <div class="queue-monitor__header">
-        <div class="queue-monitor__title">
+      <div class="chat__head">
+        <div class="chat__head__header">
           ${this.ICONS.queue}
-          <span>Cola Actual</span>
-          <span class="queue-monitor__count" id="qm-count">0</span>
+          Cola Actual
         </div>
-        <div class="queue-monitor__actions">
+        <div class="qm-head-right">
+          <div class="chat-item">
+            <div class="chat-item__title">En Cola:<span id="qm-count" class="qm-count-badge">0</span></div>
+          </div>
           <button class="queue-monitor__refresh-btn" id="qm-refresh" title="Actualizar">
             ${this.ICONS.refresh}
           </button>
@@ -351,8 +393,12 @@ const QueueMonitor = {
         ${this.ICONS.warning}
         <span id="qm-alert-text"></span>
       </div>
-      <div class="queue-monitor__list" id="qm-list">
-        <div class="queue-monitor__empty">Escaneando jugadores en cola...</div>
+      <div class="chat__main">
+        <div class="chat-content__wrap">
+          <div class="chat-content" id="qm-list">
+            <div class="queue-monitor__empty">Escaneando jugadores en cola...</div>
+          </div>
+        </div>
       </div>
     `;
   },
@@ -365,6 +411,13 @@ const QueueMonitor = {
         if (!this.isScanning) this.startScan();
       });
     }
+
+    // Close any open player row options on click outside
+    document.addEventListener("click", () => {
+      document.querySelectorAll(".chat-content__item_right.qm-show-options").forEach(el => {
+        el.classList.remove("qm-show-options");
+      });
+    });
   },
 
   // Update the scan status text
@@ -420,8 +473,8 @@ const QueueMonitor = {
     sorted.forEach((player) => {
       const isAvoided = this.isAvoided(player.SteamID64);
       const item = document.createElement("div");
-      item.className = `queue-monitor__item${
-        isAvoided ? " queue-monitor__item--avoided" : ""
+      item.className = `chat-content__item qm-player-row${
+        isAvoided ? " qm-player-row--avoided" : ""
       }`;
       item.dataset.steamid = player.SteamID64;
 
@@ -440,18 +493,35 @@ const QueueMonitor = {
 
       const avatarUrl = this.findAvatar(player.SteamID64);
 
+      // Status text: redundant inside the queue monitor panel, so we leave it empty
+      const statusText = '';
+
+      const badgeNum = this.getBadgeNumber(player.Mmr);
+      const badgeClass = `qm-badge qm-badge--${badgeNum}`;
+      const badgeStyle = `background-image: url('${this.BADGE_BASE_URL}${badgeNum}.svg') !important;`;
+
       item.innerHTML = `
-        <div class="queue-monitor__player-info">
+        <div class="chat-content__item_left">
           <a href="https://l4d2center.com/profile/?steam_id=${player.SteamID64}" target="_blank" title="${this.escapeAttr(player.Nickname)}">
-            <img class="queue-monitor__avatar" src="${avatarUrl}" alt="" />
+            <img class="chat-content__item_img" src="${avatarUrl}" alt="" />
           </a>
-          <a href="https://l4d2center.com/profile/?steam_id=${player.SteamID64}" target="_blank" class="queue-monitor__name">${this.escapeHtml(player.Nickname)}</a>
-          ${avoidBadge}
-          ${partyInfo}
+          <div class="chat-content__item_info">
+            <a href="https://l4d2center.com/profile/?steam_id=${player.SteamID64}" target="_blank" class="chat-content__item_name">${this.escapeHtml(player.Nickname)}</a>
+            <div class="chat-content__item_meta">
+              ${statusText}
+              ${avoidBadge}
+              ${partyInfo}
+            </div>
+          </div>
         </div>
-        <div class="queue-monitor__player-right">
-          <span class="queue-monitor__mmr">${player.Mmr}</span>
+        <div class="chat-content__item_right">
+          <div class="queue-monitor__mmr ${badgeClass}" style="${badgeStyle}">
+            ${player.Mmr}
+          </div>
           ${avoidBtn}
+          <button class="qm-options-toggle" title="Ver opciones">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+          </button>
         </div>
       `;
 
@@ -470,6 +540,31 @@ const QueueMonitor = {
         });
       }
 
+      // Bind options toggle button
+      const optionsToggleBtn = item.querySelector(".qm-options-toggle");
+      if (optionsToggleBtn) {
+        optionsToggleBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const rightContainer = item.querySelector(".chat-content__item_right");
+          if (rightContainer) {
+            const isOpening = !rightContainer.classList.contains("qm-show-options");
+            
+            // Close all other open options first
+            document.querySelectorAll(".chat-content__item_right.qm-show-options").forEach(el => {
+              if (el !== rightContainer) {
+                el.classList.remove("qm-show-options");
+              }
+            });
+            
+            if (isOpening) {
+              rightContainer.classList.add("qm-show-options");
+            } else {
+              rightContainer.classList.remove("qm-show-options");
+            }
+          }
+        });
+      }
+
       listEl.appendChild(item);
     });
   },
@@ -479,7 +574,7 @@ const QueueMonitor = {
     // Skip if already has our button or is in the queue monitor panel
     if (node.querySelector(".qm-avoid-btn")) return;
     if (node.closest("#l4d2-queue-monitor")) return;
-    if (node.closest("#l4d2-friends-section")) return;
+    if (node.closest("#l4d2-friends-panel")) return;
 
     const right = node.querySelector(".chat-content__item_right");
     if (!right) return;
@@ -526,6 +621,34 @@ const QueueMonitor = {
     });
 
     right.insertBefore(btn, right.firstChild);
+
+    // Inject options toggle button for native players list to support smooth actions drawer
+    if (!right.querySelector(".qm-options-toggle")) {
+      const toggleBtn = document.createElement("button");
+      toggleBtn.className = "qm-options-toggle";
+      toggleBtn.title = "Ver opciones";
+      toggleBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>`;
+
+      toggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpening = !right.classList.contains("qm-show-options");
+
+        // Close all other open options first
+        document.querySelectorAll(".chat-content__item_right.qm-show-options").forEach(el => {
+          if (el !== right) {
+            el.classList.remove("qm-show-options");
+          }
+        });
+
+        if (isOpening) {
+          right.classList.add("qm-show-options");
+        } else {
+          right.classList.remove("qm-show-options");
+        }
+      });
+
+      right.appendChild(toggleBtn);
+    }
   },
 
   // Utility: escape HTML

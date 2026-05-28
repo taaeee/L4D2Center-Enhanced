@@ -11,6 +11,12 @@ window.addEventListener("message", (event) => {
   if (!data || typeof data !== "object" || !data.type) return;
   if (!data.type.startsWith("L4D2_")) return;
 
+  // Liveness ping/pong — content script uses this to verify interceptor is loaded
+  if (data.type === "L4D2_INTERCEPTOR_PING") {
+    window.postMessage({ type: "L4D2_INTERCEPTOR_PONG" }, "*");
+    return;
+  }
+
   if (data.type === "L4D2_CREATE_PARTY") {
     console.log("L4D2 Enhanced: Processing CREATE_PARTY");
     console.log(
@@ -291,7 +297,7 @@ async function performQueueScan() {
       await sleep(DELAY_MS);
     }
 
-    // Map to a clean serializable format
+    // Map to a clean serializable format (MyParty is a per-player property)
     const players = queuePlayers.map((p) => ({
       Nickname: p.Nickname || "",
       SteamID64: p.SteamID64 || "",
@@ -301,6 +307,11 @@ async function performQueueScan() {
       PartyCode: p.PartyCode || "",
       PartyMembersCount: p.PartyMembersCount || 0,
       Avatar: p.Avatar || "",
+      MyParty: (p.MyParty || []).map((m) => ({
+        Nickname: m.Nickname || "",
+        SteamID64: m.SteamID64 || "",
+        Mmr: m.Mmr || 0,
+      })),
     }));
 
     window.postMessage(

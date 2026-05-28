@@ -23,15 +23,11 @@ const Invitations = {
 
   // Initialize icon URLs
   initIcons: function () {
-    if (typeof chrome !== "undefined" && chrome.runtime) {
-      this.icons.addFriend = chrome.runtime.getURL("icons/add_friend.svg");
-      this.icons.deleteFriend = chrome.runtime.getURL(
-        "icons/delete_friend.svg"
-      );
-      this.icons.friends = chrome.runtime.getURL("icons/friends.svg");
-      this.icons.invite = chrome.runtime.getURL("icons/invite_sent.svg");
-      this.icons.edit = chrome.runtime.getURL("icons/nickname_edit.svg");
-    }
+    this.icons.addFriend = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill-add" viewBox="0 0 16 16"><path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0m-2-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/><path d="M2 13c0 1 1 1 1 1h5.256A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1 1.544-3.393Q8.844 9.002 8 9c-5 0-6 3-6 4"/></svg>`;
+    this.icons.deleteFriend = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill-x" viewBox="0 0 16 16"><path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0m-9 8c0 1 1 1 1 1h5.256A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1 1.544-3.393Q8.844 9.002 8 9c-5 0-6 3-6 4"/><path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m-.646-4.854.646.647.646-.647a.5.5 0 0 1 .708.708l-.647.646.647.646a.5.5 0 0 1-.708.708l-.646-.647-.646.647a.5.5 0 0 1-.708-.708l.647-.646-.647-.646a.5.5 0 0 1 .708-.708"/></svg>`;
+    this.icons.friends = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-people-fill friends-toggle-icon" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg>`;
+    this.icons.invite = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-envelope-arrow-up-fill" viewBox="0 0 16 16"><path d="M.05 3.555A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.555L8 8.414zM0 4.697v7.104l5.803-3.558zm.192 8.159 6.57-4.027L8 9.586l1.239-.757.367.225A4.49 4.49 0 0 0 8 12.5c0 .526.09 1.03.256 1.5H2a2 2 0 0 1-1.808-1.144M16 4.697v4.974A4.5 4.5 0 0 0 12.5 8a4.5 4.5 0 0 0-1.965.45l-.338-.207z"/><path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.354-5.354 1.25 1.25a.5.5 0 0 1-.708.708L13 12.207V14a.5.5 0 0 1-1 0v-1.717l-.28.305a.5.5 0 0 1-.737-.676l1.149-1.25a.5.5 0 0 1 .722-.016"/></svg>`;
+    this.icons.edit = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/></svg>`;
   },
 
   // Default avatar placeholder
@@ -623,40 +619,127 @@ const Invitations = {
   },
 
   renderFriendsSection: function () {
-    const existing = document.getElementById("l4d2-friends-section");
-    if (existing) existing.remove();
+    const existingBtn = document.getElementById("l4d2-friends-toggle");
+    if (existingBtn) existingBtn.remove();
+    const existingPanel = document.getElementById("l4d2-friends-panel");
+    if (existingPanel) existingPanel.remove();
 
-    const playersBlock = document.querySelector(".chat.players");
-    if (!playersBlock) return;
+    const navPanel = document.querySelector(".header__nav");
+    if (!navPanel) return;
 
-    const section = document.createElement("div");
-    section.id = "l4d2-friends-section";
-    section.className = "chat friends-section";
-    section.innerHTML = `
-      <div class="chat__head">
-        <div class="chat__head__header">
-          <img src="${
-            this.icons.friends
-          }" alt="" class="friends-icon" /> Friends (${this.friends.length})
-          <span id="l4d2-add-friend-manual" class="friend-action-btn add-friend-manual-btn" title="Add friend by SteamID">
-            <img src="${this.icons.addFriend}" alt="Add Friend" />
-          </span>
+    // Save notif center before clearing
+    const notifCenter = document.getElementById("l4d2-notif-center");
+
+    // Clear existing nav links
+    navPanel.innerHTML = '';
+
+    // Create Rules Link
+    const rulesLink = document.createElement("a");
+    rulesLink.href = "https://l4d2center.com/rules/en.html";
+    rulesLink.target = "_blank";
+    rulesLink.className = "friends-toggle-btn";
+    rulesLink.title = "Rules";
+    rulesLink.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M14 10h5.5L14 4.5zM5 3h10l6 6v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5c0-1.11.89-2 2-2m0 9v2h14v-2zm0 4v2h9v-2z"/></svg>`;
+
+    // Create Bans Link
+    const bansLink = document.createElement("a");
+    bansLink.href = "/bans/";
+    bansLink.target = "_blank";
+    bansLink.className = "friends-toggle-btn";
+    bansLink.title = "Bans";
+    bansLink.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0m2.7-6.3l12.6 12.6"/></svg>`;
+
+    // Create Servers Link
+    const serversLink = document.createElement("a");
+    serversLink.href = "https://srv.l4d2center.com/?s=l4d2c";
+    serversLink.target = "_blank";
+    serversLink.className = "friends-toggle-btn";
+    serversLink.title = "Servers";
+    serversLink.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3m0 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3zm4-7v.01M7 16v.01"/></svg>`;
+
+    // Create Maps Link
+    const mapsLink = document.createElement("a");
+    mapsLink.href = "https://l4d2center.com/maps/servers/";
+    mapsLink.target = "_blank";
+    mapsLink.className = "friends-toggle-btn";
+    mapsLink.title = "Maps";
+    mapsLink.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m9 19l-5.21 1.737a.6.6 0 0 1-.79-.57V5.433a.6.6 0 0 1 .41-.569L9 3m0 16l6 2m-6-2V3m6 18l5.59-1.863a.6.6 0 0 0 .41-.57V3.832a.6.6 0 0 0-.79-.569L15 5m0 16V5m0 0L9 3"/></svg>`;
+
+    navPanel.appendChild(rulesLink);
+    navPanel.appendChild(bansLink);
+    navPanel.appendChild(serversLink);
+    navPanel.appendChild(mapsLink);
+
+    // Create Toggle Button
+    const toggleBtn = document.createElement("button");
+    toggleBtn.id = "l4d2-friends-toggle";
+    toggleBtn.className = "friends-toggle-btn";
+    toggleBtn.title = "Friends";
+    toggleBtn.innerHTML = `
+      ${this.icons.friends}
+      ${this.friends.length > 0 ? `<span class="friends-toggle-badge">${this.friends.length}</span>` : ""}
+    `;
+    
+    // Create Dropdown Panel
+    const panel = document.createElement("div");
+    panel.id = "l4d2-friends-panel";
+    panel.className = "friends-dropdown-panel";
+    panel.innerHTML = `
+      <div class="friends-panel__header">
+        <div class="friends-panel__title">
+          Friends (${this.friends.length})
         </div>
+        <span id="l4d2-add-friend-manual" class="friend-action-btn add-friend-manual-btn" title="Add friend by SteamID">
+          ${this.icons.addFriend}
+        </span>
       </div>
-      <div class="chat__main">
-        <div class="chat-content__wrap">
-          <div class="chat-content" id="l4d2-friends-list">
-            ${
-              this.friends.length === 0
-                ? '<div class="friends-empty">No friends yet. Click the add friend icon on a player to add them!</div>'
-                : ""
-            }
-          </div>
+      <div class="friends-panel__main">
+        <div class="chat-content" id="l4d2-friends-list">
+          ${
+            this.friends.length === 0
+              ? '<div class="friends-empty">No friends yet. Click the add friend icon on a player to add them!</div>'
+              : ""
+          }
         </div>
       </div>
     `;
 
-    playersBlock.parentNode.insertBefore(section, playersBlock);
+    navPanel.appendChild(toggleBtn);
+    navPanel.appendChild(panel);
+
+    if (notifCenter) {
+      navPanel.appendChild(notifCenter);
+    } else {
+      // Fallback: try to initialize if missing
+      this.initNotificationCenter();
+      const freshNotifCenter = document.getElementById("l4d2-notif-center");
+      if (freshNotifCenter) {
+        navPanel.appendChild(freshNotifCenter);
+      }
+    }
+
+    // Toggle logic
+    toggleBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = panel.classList.contains("friends-dropdown-panel--open");
+      
+      // Close other panels if needed (e.g., notifications)
+      const notifPanel = document.querySelector(".notif-panel");
+      if (notifPanel) notifPanel.classList.remove("notif-panel--open");
+
+      if (isOpen) {
+        panel.classList.remove("friends-dropdown-panel--open");
+      } else {
+        panel.classList.add("friends-dropdown-panel--open");
+      }
+    });
+
+    // Close when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!panel.contains(e.target) && !toggleBtn.contains(e.target)) {
+        panel.classList.remove("friends-dropdown-panel--open");
+      }
+    });
 
     // Manual add friend by SteamID
     document.getElementById("l4d2-add-friend-manual").onclick = (e) => {
@@ -699,9 +782,9 @@ const Invitations = {
         </div>
       </div>
       <div class="chat-content__item_right friend-actions">
-        <span class="friend-action-btn friend-invite-btn" title="Send Invite"><img src="${this.icons.invite}" alt="Invite" /></span>
-        <span class="friend-action-btn friend-edit-btn" title="Edit Nickname"><img src="${this.icons.edit}" alt="Edit" /></span>
-        <span class="friend-action-btn friend-remove-btn" title="Remove"><img src="${this.icons.deleteFriend}" alt="Remove" /></span>
+        <span class="friend-action-btn friend-invite-btn" title="Send Invite">${this.icons.invite}</span>
+        <span class="friend-action-btn friend-edit-btn" title="Edit Nickname">${this.icons.edit}</span>
+        <span class="friend-action-btn friend-remove-btn" title="Remove">${this.icons.deleteFriend}</span>
       </div>
     `;
 
@@ -728,7 +811,7 @@ const Invitations = {
 
   injectInviteButton: function (node) {
     if (node.querySelector(".invite-btn")) return;
-    if (node.closest("#l4d2-friends-section")) return;
+    if (node.closest("#l4d2-friends-panel")) return;
 
     const right = node.querySelector(".chat-content__item_right");
     if (!right) return;
@@ -747,7 +830,7 @@ const Invitations = {
     );
 
     const inviteBtn = document.createElement("span");
-    inviteBtn.innerHTML = `<img src="${this.icons.invite}" alt="" /> Invite`;
+    inviteBtn.innerHTML = `${this.icons.invite} Invite`;
     inviteBtn.className = "invite-btn";
     inviteBtn.title = "Send Invite";
     inviteBtn.onclick = (e) => {
@@ -758,7 +841,7 @@ const Invitations = {
 
     if (!isFriend) {
       const friendBtn = document.createElement("span");
-      friendBtn.innerHTML = `<img src="${this.icons.addFriend}" alt="Add Friend" />`;
+      friendBtn.innerHTML = `${this.icons.addFriend}`;
       friendBtn.className = "add-friend-btn";
       friendBtn.title = "Add to Friends";
       friendBtn.onclick = (e) => {
