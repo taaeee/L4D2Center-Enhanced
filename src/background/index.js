@@ -99,18 +99,15 @@ async function isAnticheatAlive() {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "launchAnticheat") {
     (async () => {
-      // Check session flag, but verify with a live ping
-      const flagResult = await chrome.storage.session.get(["anticheatRunning"]);
-      if (flagResult.anticheatRunning) {
-        const alive = await isAnticheatAlive();
-        if (alive) {
-          console.log("L4D2 Enhanced [BG]: Anticheat verified running (ping OK), skipping launch.");
-          sendResponse({ success: true, alreadyRunning: true });
-          return;
-        } else {
-          console.log("L4D2 Enhanced [BG]: Anticheat flag was set but ping failed — was closed. Clearing flag.");
-          await chrome.storage.session.set({ anticheatRunning: false });
-        }
+      // Always verify with a live ping
+      const alive = await isAnticheatAlive();
+      if (alive) {
+        console.log("L4D2 Enhanced [BG]: Anticheat verified running (ping OK), skipping launch.");
+        await chrome.storage.session.set({ anticheatRunning: true });
+        sendResponse({ success: true, alreadyRunning: true });
+        return;
+      } else {
+        await chrome.storage.session.set({ anticheatRunning: false });
       }
 
       const localResult = await chrome.storage.local.get(["anticheatPath"]);
@@ -226,15 +223,13 @@ async function handleInviteAccept(notifId) {
     const inviteData = data[`notif_${notifId}`];
 
     if (inviteData && inviteData.lobbyLink) {
-      // Step 1: Check if anticheat is running (verify with ping)
-      const flagData = await chrome.storage.session.get(["anticheatRunning"]);
-      let anticheatRunning = false;
-      if (flagData.anticheatRunning) {
-        anticheatRunning = await isAnticheatAlive();
-        if (!anticheatRunning) {
-          console.log("L4D2 Enhanced [BG]: Anticheat was closed, clearing flag.");
-          await chrome.storage.session.set({ anticheatRunning: false });
-        }
+      // Step 1: Check if anticheat is running (verify with live ping)
+      const anticheatRunning = await isAnticheatAlive();
+      if (!anticheatRunning) {
+        console.log("L4D2 Enhanced [BG]: Anticheat is closed, preparing to launch.");
+        await chrome.storage.session.set({ anticheatRunning: false });
+      } else {
+        await chrome.storage.session.set({ anticheatRunning: true });
       }
 
       if (!anticheatRunning) {
@@ -385,6 +380,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   if (message.type === "getChangelog") {
     getChangelog().then(sendResponse);
+    return true;
+  }
+  
+  if (message.type === "proxyFetch") {
+    const { url, options } = message;
+    fetch(url, options)
+      .then(async (res) => {
+        const text = await res.text();
+        sendResponse({
+          ok: res.ok,
+          status: res.status,
+          statusText: res.statusText,
+          headers: Array.from(res.headers.entries()),
+          bodyText: text,
+        });
+      })
+      .catch((err) => {
+        sendResponse({ error: err.message });
+      });
     return true;
   }
 });

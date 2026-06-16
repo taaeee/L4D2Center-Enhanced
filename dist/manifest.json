@@ -23,20 +23,29 @@
     "https://api.github.com/*"
   ],
   "background": {
-    "service_worker": "src/background/index.js"
+    "service_worker": "service-worker-loader.js",
+    "type": "module"
   },
   "content_scripts": [
     {
+      "js": [
+        "assets/index.jsx-loader-B7QixIIC.js"
+      ],
       "matches": [
         "https://l4d2center.com/play.html",
         "https://l4d2center.com/play.html?join_party=*"
       ],
-      "js": ["src/content/index.jsx"],
-      "run_at": "document_end"
+      "run_at": "document_end",
+      "css": [
+        "assets/index-qpVoPkfI.css"
+      ]
     }
   ],
   "web_accessible_resources": [
     {
+      "matches": [
+        "https://l4d2center.com/*"
+      ],
       "resources": [
         "src/interceptor.js",
         "icons/add_friend.svg",
@@ -45,7 +54,19 @@
         "icons/invite_sent.svg",
         "icons/nickname_edit.svg"
       ],
-      "matches": ["https://l4d2center.com/*"]
+      "use_dynamic_url": false
+    },
+    {
+      "matches": [
+        "https://l4d2center.com/*",
+        "https://l4d2center.com/*"
+      ],
+      "resources": [
+        "assets/chunk-C0phanGV.js",
+        "assets/jsx-runtime-CZP94eBP.js",
+        "assets/index.jsx-CKf0WCnF.js"
+      ],
+      "use_dynamic_url": false
     }
   ],
   "action": {

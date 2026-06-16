@@ -3,6 +3,24 @@
    ==================== */
 
 /* --- CSS Variables for Theme --- */
+@import "tailwindcss";
+
+@theme {
+  --animate-search-pulse: searchPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  @keyframes searchPulse {
+    0%, 100% {
+      background-color: var(--l4d2-top-color);
+      color: var(--l4d2-accent1);
+      border-color: var(--l4d2-accent1);
+    }
+    50% {
+      background-color: var(--l4d2-accent1);
+      color: var(--l4d2-play-text, #062e6f);
+      border-color: var(--l4d2-accent1);
+    }
+  }
+}
+
 :root {
   --l4d2-bg-color: #1a1a1a;
   --l4d2-top-color: #2d2d2d;
@@ -60,7 +78,7 @@ body.custom-theme .personal__title {
 body.custom-theme .personal .personal__btn.btn-red {
   background: var(--l4d2-accent1) !important;
   border-radius: 9999px !important;
-  color: #062e6f !important;
+  color: var(--l4d2-play-text, #062e6f) !important;
   font-weight: 600 !important;
   border: none !important;
   transition: all 0.2s ease !important;
@@ -73,7 +91,7 @@ body.custom-theme .personal .personal__btn.btn-red:hover {
 body.custom-theme .header__btn {
   background: var(--l4d2-accent1) !important;
   border-radius: 9999px !important;
-  color: #062e6f !important;
+  color: var(--l4d2-play-text, #062e6f) !important;
   font-weight: 600 !important;
   border: none !important;
   transition: all 0.2s ease !important;
@@ -108,7 +126,7 @@ body.custom-theme .streamers-head {
 body.custom-theme .streamers-head__btn {
   background: var(--l4d2-accent1) !important;
   border-radius: 9999px !important;
-  color: #062e6f !important;
+  color: var(--l4d2-play-text, #062e6f) !important;
   transition: background-color 0.2s ease !important;
   border: none !important;
 }
@@ -157,7 +175,7 @@ body.custom-theme .private-invite__input input {
 body.custom-theme .private-footer__btn_red {
   background: var(--l4d2-accent1) !important;
   border-radius: 9999px !important;
-  color: #062e6f !important;
+  color: var(--l4d2-play-text, #062e6f) !important;
   font-weight: 600 !important;
   border: none !important;
 }
@@ -238,9 +256,18 @@ body.custom-theme .private-footer__btn {
 
 .private-main__item:hover {
   border-color: var(--l4d2-accent1, #ff9800) !important;
-  background: rgba(255, 255, 255, 0.04) !important;
+  background: var(--l4d2-accent2) !important;
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+body.custom-theme .personal .personal__btn.btn-grey {
+  background-color: var(--l4d2-top-color) !important;
+  color: var(--l4d2-accent1) !important;
+  border: 1px solid var(--l4d2-accent1) !important;
+  border-radius: 9999px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
 }
 
 /* Override the default left-alignment layout */
@@ -401,7 +428,7 @@ body.custom-theme .private-footer__btn {
 body.custom-theme .ready {
   background: var(--l4d2-accent1) !important;
   border-radius: 9999px !important;
-  color: #062e6f !important;
+  color: var(--l4d2-play-text, #062e6f) !important;
   font-weight: 600 !important;
   border: none !important;
 }
@@ -436,8 +463,23 @@ body.custom-theme .banned {
 }
 
 /* === HIDE WELCOME ANNOUNCE === */
-.announce {
+/* Oculta los anuncios genéricos, pero NO oculta reglas, errores ni validaciones */
+.announce:not(.acceptrules):not(.error):not(.warning):not(.alert):not(.validate) {
   display: none !important;
+}
+
+/* Forzar que los importantes sí se muestren por si hay otro conflicto */
+.announce.acceptrules,
+.announce.error,
+.announce.warning,
+.announce.alert,
+.announce.validate {
+  display: flex !important;
+  flex-direction: column !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  height: auto !important;
+  min-height: 50px !important;
 }
 
 /* Push the personal panel to the top so it aligns with Chat */
@@ -452,6 +494,7 @@ body.custom-theme .banned {
   align-items: center !important;
   padding: 28px 24px 24px !important;
   border-radius: 16px !important;
+  animation: panelFadeIn 0.45s cubic-bezier(0.05, 0.7, 0.1, 1) forwards;
 }
 
 .personal__title {
@@ -550,9 +593,9 @@ body.custom-theme .banned {
 /* Find a Game — primary accent */
 .personal .personal__btn.btn-red {
   background: var(--l4d2-accent1, #a8c7fa) !important;
-  color: #062e6f !important;
+  color: var(--l4d2-play-text, #062e6f) !important;
   border: none !important;
-  order: 2 !important;
+  order: 1 !important;
 }
 .personal .personal__btn.btn-red:hover {
   filter: brightness(1.1);
@@ -604,7 +647,7 @@ body.custom-theme .banned {
   cursor: pointer;
   transition: all 0.2s ease;
   box-sizing: border-box;
-  order: 1;
+  order: 2;
 }
 .anticheat-panel-btn:hover {
   background: rgba(255, 255, 255, 0.06);
@@ -684,11 +727,22 @@ body.custom-theme .banned {
   100% { background-position: 200% center; }
 }
 
+@keyframes panelFadeIn {
+  0% { 
+    opacity: 0; 
+    transform: translateY(12px) scale(0.98); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+
 .queue {
   border-radius: 16px !important;
   overflow: hidden !important;
   border: 1px solid var(--l4d2-border-color, #44474f) !important;
-  animation: queuePulse 3s ease-in-out infinite;
+  animation: panelFadeIn 0.45s cubic-bezier(0.05, 0.7, 0.1, 1) forwards, queuePulse 3s ease-in-out infinite 0.45s;
   transition: box-shadow 0.3s;
 }
 
@@ -1146,7 +1200,7 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   gap: 6px;
   padding: 6px 14px;
   background: var(--l4d2-accent1, #a8c7fa);
-  color: #062e6f;
+  color: var(--l4d2-play-text, #062e6f);
   border-radius: 9999px;
   margin-right: 4px;
   cursor: pointer;
@@ -1415,17 +1469,7 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   transform: scale(1.15);
 }
 
-.friend-invite-btn {
-  /* No background, icon only */
-}
 
-.friend-edit-btn {
-  /* No background, icon only */
-}
-
-.friend-remove-btn {
-  /* No background, icon only */
-}
 
 /* === ANTICHEAT HEADER BUTTON === */
 .anticheat-header-btn {
@@ -1435,7 +1479,7 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   padding: 6px 14px;
   font-size: 13px;
   font-weight: 600;
-  color: #062e6f;
+  color: var(--l4d2-play-text, #062e6f);
   background: var(--l4d2-accent1, #a8c7fa);
   border-radius: 9999px;
   cursor: pointer;
@@ -1917,7 +1961,7 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   font-size: 12px;
   font-weight: 600;
   font-family: inherit;
-  color: #062e6f;
+  color: var(--l4d2-play-text, #062e6f);
   background: var(--l4d2-accent1, #a8c7fa);
   border: none;
   border-radius: 9999px;
@@ -1931,7 +1975,7 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   filter: brightness(1.1);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  color: #062e6f;
+  color: var(--l4d2-play-text, #062e6f);
 }
 
 /* Modal footer */
@@ -1945,7 +1989,7 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
 
 .mh-load-more {
   background: var(--l4d2-accent1, #a8c7fa);
-  color: #062e6f;
+  color: var(--l4d2-play-text, #062e6f);
   border: none;
   padding: 10px 28px;
   border-radius: 9999px;
@@ -2046,7 +2090,7 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   height: 22px;
   padding: 0 6px;
   background: var(--l4d2-accent1, #a8c7fa);
-  color: #062e6f;
+  color: var(--l4d2-play-text, #062e6f);
   font-size: 11px;
   font-weight: 700;
   border-radius: 9999px;
@@ -2290,7 +2334,7 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
 
 /* 1. HIDE ALL ACTION BUTTONS by default (including dynamically injected ones like invite-btn, add-friend-btn, and qm-avoid-btn) */
 #l4d2-queue-monitor .chat-content__item_right > *:not(.queue-monitor__mmr):not(.qm-options-toggle),
-.chat.players .chat-content__item_right > *:not(.chat-content__status):not([class*="badge"]):not(.qm-options-toggle) {
+.chat.players .chat-content__item_right > *:not(.chat-content__status):not(.chat-content__lobby):not([class*="badge"]):not(.qm-options-toggle) {
   opacity: 0 !important;
   max-width: 0 !important;
   margin: 0 !important;
@@ -2305,10 +2349,11 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
 /* 2. MMR badge / native status badge visible by default */
 .queue-monitor__mmr,
 .chat.players .chat-content__status,
+.chat.players .chat-content__lobby,
 .chat.players [class*="badge"] {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
   opacity: 1 !important;
-  max-width: 60px !important;
+  max-width: 80px !important;
 }
 
 .queue-monitor__mmr {
@@ -2330,7 +2375,7 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   
   /* Transition for hiding */
   opacity: 1 !important;
-  max-width: 60px !important;
+  max-width: 80px !important;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
@@ -2351,6 +2396,7 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
    - Reveal action buttons */
 #l4d2-queue-monitor .chat-content__item_right.qm-show-options .queue-monitor__mmr,
 .chat.players .chat-content__item_right.qm-show-options .chat-content__status,
+.chat.players .chat-content__item_right.qm-show-options .chat-content__lobby,
 .chat.players .chat-content__item_right.qm-show-options [class*="badge"] {
   opacity: 0 !important;
   max-width: 0 !important;
@@ -2362,7 +2408,7 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
 }
 
 #l4d2-queue-monitor .chat-content__item_right.qm-show-options > *:not(.queue-monitor__mmr):not(.qm-options-toggle),
-.chat.players .chat-content__item_right.qm-show-options > *:not(.chat-content__status):not([class*="badge"]):not(.qm-options-toggle) {
+.chat.players .chat-content__item_right.qm-show-options > *:not(.chat-content__status):not(.chat-content__lobby):not([class*="badge"]):not(.qm-options-toggle) {
   opacity: 1 !important;
   max-width: 32px !important; /* Ensure uniform space for icons */
   pointer-events: auto !important;
@@ -2484,6 +2530,7 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
 }
 .chat-content__item_right .queue-monitor__mmr,
 .chat-content__item_right .chat-content__status,
+.chat-content__item_right .chat-content__lobby,
 .chat-content__item_right [class*="badge"] {
   order: 4 !important;
 }
@@ -2571,9 +2618,7 @@ body.streamer-mode #invitecodeoutput_inparty:focus {
   color: #ff6b6b !important;
 }
 
-.qm-avoid-btn--active {
-  /* Already active state */
-}
+
 
 .qm-avoid-btn__icon svg {
   width: 16px;

@@ -1,11 +1,19 @@
 // L4D2 Center Enhanced - Queue Monitor & Avoid List
 // Shows current queue players in a panel and alerts when avoided players are found
 
+
+
+import { createClient } from '@supabase/supabase-js';
+
 const QueueMonitor = {
   // State
   queuePlayers: [],
   avoidList: [],
   isScanning: false,
+  avatarCache: {},
+  interceptorReady: false,
+  pendingScan: false,
+  supabase: null,
   autoRefreshInterval: null,
   autoRefreshEnabled: true,
   AUTO_REFRESH_MS: 30000, // 30 seconds
@@ -57,32 +65,42 @@ const QueueMonitor = {
     const uncached = steamIds.filter((id) => !this.avatarCache[id]);
     if (uncached.length === 0) return;
 
-    try {
-      const response = await fetch(
-        `${this.supabaseConfig.url}/functions/v1/steam-avatars`,
-        {
+    if (!this.supabase) {
+      this.supabase = createClient(this.supabaseConfig.url, this.supabaseConfig.key, {
+        auth: { persistSession: false }
+      });
+    }
+
+    // Process in chunks of 100
+    const CHUNK_SIZE = 100;
+    for (let i = 0; i < uncached.length; i += CHUNK_SIZE) {
+      const chunk = uncached.slice(i, i + CHUNK_SIZE);
+
+      try {
+        const response = await fetch(`${this.supabaseConfig.url}/functions/v1/steam-avatars`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${this.supabaseConfig.key}`,
+            apikey: this.supabaseConfig.key,
           },
-          body: JSON.stringify({ steamids: uncached }),
+          body: JSON.stringify({ steamids: chunk })
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          console.warn("L4D2 Enhanced: Avatar API raw error", response.status, text);
+          continue;
         }
-      );
 
-      if (!response.ok) {
-        console.warn("L4D2 Enhanced: Avatar API error", response.status);
-        return;
+        const data = await response.json();
+        if (data && data.avatars) {
+          Object.assign(this.avatarCache, data.avatars);
+          this.renderPanel();
+        }
+      } catch (err) {
+        console.warn("L4D2 Enhanced: Failed to fetch avatars chunk", err);
       }
-
-      const data = await response.json();
-      if (data.avatars) {
-        Object.assign(this.avatarCache, data.avatars);
-        // Re-render to update avatar images
-        this.renderPanel();
-      }
-    } catch (err) {
-      console.warn("L4D2 Enhanced: Failed to fetch avatars", err);
     }
   },
 
@@ -147,6 +165,9 @@ const QueueMonitor = {
 
   // Add a player to the avoid list
   addToAvoidList: function (steamId64, nickname) {
+    if (!Array.isArray(this.avoidList)) {
+      this.avoidList = [];
+    }
     if (this.avoidList.find((p) => p.steamId64 === steamId64)) {
       this.showToast(`${nickname} ya está en tu lista de avoid`, "info");
       return;
@@ -165,6 +186,9 @@ const QueueMonitor = {
 
   // Remove a player from the avoid list
   removeFromAvoidList: function (steamId64) {
+    if (!Array.isArray(this.avoidList)) {
+      this.avoidList = [];
+    }
     const player = this.avoidList.find((p) => p.steamId64 === steamId64);
     this.avoidList = this.avoidList.filter((p) => p.steamId64 !== steamId64);
     this.saveAvoidList();
@@ -179,6 +203,9 @@ const QueueMonitor = {
 
   // Check if a player is on the avoid list
   isAvoided: function (steamId64) {
+    if (!Array.isArray(this.avoidList)) {
+      this.avoidList = [];
+    }
     return this.avoidList.some((p) => p.steamId64 === steamId64);
   },
 
@@ -435,11 +462,13 @@ const QueueMonitor = {
 
     if (!listEl) return;
 
+    const inQueuePlayers = this.queuePlayers.filter(p => p.IsInQueue);
+
     // Update count
-    if (countEl) countEl.textContent = this.queuePlayers.length;
+    if (countEl) countEl.textContent = inQueuePlayers.length;
 
     // Check for avoided players in queue
-    const avoidedInQueue = this.queuePlayers.filter((p) =>
+    const avoidedInQueue = inQueuePlayers.filter((p) =>
       this.isAvoided(p.SteamID64)
     );
 
@@ -455,14 +484,14 @@ const QueueMonitor = {
     }
 
     // Render player list
-    if (this.queuePlayers.length === 0) {
+    if (inQueuePlayers.length === 0) {
       listEl.innerHTML =
         '<div class="queue-monitor__empty">No hay jugadores en cola</div>';
       return;
     }
 
     // Sort: avoided players first, then by MMR descending
-    const sorted = [...this.queuePlayers].sort((a, b) => {
+    const sorted = [...inQueuePlayers].sort((a, b) => {
       const aAvoided = this.isAvoided(a.SteamID64) ? 0 : 1;
       const bAvoided = this.isAvoided(b.SteamID64) ? 0 : 1;
       if (aAvoided !== bAvoided) return aAvoided - bAvoided;
@@ -493,8 +522,10 @@ const QueueMonitor = {
 
       const avatarUrl = this.findAvatar(player.SteamID64);
 
-      // Status text: redundant inside the queue monitor panel, so we leave it empty
-      const statusText = '';
+      // Status text
+      let statuses = [];
+      if (player.IsInGame) statuses.push('<span class="chat-content__lobby ingame">In Game</span>');
+      const statusText = statuses.join(' ');
 
       const badgeNum = this.getBadgeNumber(player.Mmr);
       const badgeClass = `qm-badge qm-badge--${badgeNum}`;

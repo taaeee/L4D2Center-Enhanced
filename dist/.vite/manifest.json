@@ -1,0 +1,58 @@
+{
+  "../../@crx/manifest": {
+    "file": "assets/crx-manifest.js-BOd9oNIB.js",
+    "name": "crx-manifest.js",
+    "src": "../../@crx/manifest",
+    "isEntry": true
+  },
+  "_chunk-C0phanGV.js": {
+    "file": "assets/chunk-C0phanGV.js",
+    "name": "chunk"
+  },
+  "_index.jsx-loader-B7QixIIC.js": {
+    "file": "assets/index.jsx-loader-B7QixIIC.js",
+    "src": "_index.jsx-loader-B7QixIIC.js"
+  },
+  "_jsx-runtime-CZP94eBP.js": {
+    "file": "assets/jsx-runtime-CZP94eBP.js",
+    "name": "jsx-runtime",
+    "imports": [
+      "_chunk-C0phanGV.js"
+    ]
+  },
+  "src/background/index.js": {
+    "file": "assets/index.js-CjNaDU0b.js",
+    "name": "index.js",
+    "src": "src/background/index.js",
+    "isEntry": true,
+    "imports": [
+      "_chunk-C0phanGV.js"
+    ]
+  },
+  "src/content/index.jsx": {
+    "file": "assets/index.jsx-CKf0WCnF.js",
+    "name": "index.jsx",
+    "src": "src/content/index.jsx",
+    "isEntry": true,
+    "imports": [
+      "_chunk-C0phanGV.js",
+      "_jsx-runtime-CZP94eBP.js"
+    ],
+    "css": [
+      "assets/index-qpVoPkfI.css"
+    ]
+  },
+  "src/popup/index.html": {
+    "file": "assets/index.html-DOD4bjVV.js",
+    "name": "index.html",
+    "src": "src/popup/index.html",
+    "isEntry": true,
+    "imports": [
+      "_chunk-C0phanGV.js",
+      "_jsx-runtime-CZP94eBP.js"
+    ],
+    "css": [
+      "assets/index-CeMTDIgE.css"
+    ]
+  }
+}

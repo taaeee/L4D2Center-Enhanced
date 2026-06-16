@@ -1,5 +1,8 @@
 // L4D2 Center Enhanced - Invitation & Friends System
 // Powered by Supabase
+import { createClient } from '@supabase/supabase-js';
+
+
 
 const Invitations = {
   supabase: null,
@@ -58,30 +61,41 @@ const Invitations = {
     const uncached = steamIds.filter((id) => !this.avatarCache[id]);
     if (uncached.length === 0) return this.avatarCache;
 
-    try {
-      const response = await fetch(
-        `${this.config.url}/functions/v1/steam-avatars`,
-        {
+    if (!this.supabase) {
+      this.supabase = createClient(this.config.url, this.config.key, {
+        auth: { persistSession: false }
+      });
+    }
+
+    // Process in chunks of 100
+    const CHUNK_SIZE = 100;
+    for (let i = 0; i < uncached.length; i += CHUNK_SIZE) {
+      const chunk = uncached.slice(i, i + CHUNK_SIZE);
+
+      try {
+        const response = await fetch(`${this.config.url}/functions/v1/steam-avatars`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${this.config.key}`,
+            apikey: this.config.key,
           },
-          body: JSON.stringify({ steamids: uncached }),
+          body: JSON.stringify({ steamids: chunk })
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          console.warn("L4D2 Enhanced: Steam avatar API raw error", response.status, text);
+          continue;
         }
-      );
 
-      if (!response.ok) {
-        console.warn("L4D2 Enhanced: Steam avatar API error", response.status);
-        return this.avatarCache;
+        const data = await response.json();
+        if (data && data.avatars) {
+          Object.assign(this.avatarCache, data.avatars);
+        }
+      } catch (err) {
+        console.warn("L4D2 Enhanced: Failed to fetch Steam avatars chunk", err);
       }
-
-      const data = await response.json();
-      if (data.avatars) {
-        Object.assign(this.avatarCache, data.avatars);
-      }
-    } catch (err) {
-      console.warn("L4D2 Enhanced: Failed to fetch Steam avatars", err);
     }
 
     return this.avatarCache;
@@ -131,21 +145,15 @@ const Invitations = {
     }
     console.log(`L4D2 Enhanced: Identified User ${this.currentUser}`);
 
-    if (
-      typeof window.supabase !== "undefined" &&
-      window.supabase.createClient
-    ) {
-      this.supabase = window.supabase.createClient(
-        this.config.url,
-        this.config.key
-      );
+    try {
+      this.supabase = createClient(this.config.url, this.config.key, {
+        auth: { persistSession: false }
+      });
       this.startHeartbeat();
       this.listenForInvites();
       await this.loadFriends();
-    } else {
-      console.warn(
-        "L4D2 Enhanced: Supabase client not found. Skipped connection."
-      );
+    } catch (e) {
+      console.warn("L4D2 Enhanced: Supabase client init failed in Invitations", e);
     }
 
     // Always create the notification center

@@ -3,5 +3,5 @@
   "description": "L4D2 Center Enhanced - Native Messaging Host",
   "path": "F:/Repos/L4D2CenterEnhanced/native_host/launch_host.bat",
   "type": "stdio",
-  "allowed_origins": ["chrome-extension://fcljmgomjdahicjcfaogopccaiejdhon/"]
+  "allowed_origins": ["chrome-extension://fdaaipfipmlpebbdnckcljiafbfkbkni/"]
 }

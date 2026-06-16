@@ -44,7 +44,8 @@ function waitFor(conditionFn, { timeout = 15000, interval = 200, label = "condit
         return;
       }
       if (Date.now() - start > timeout) {
-        reject(new Error(`L4D2 Enhanced: ✗ Timeout waiting for ${label} (${timeout}ms)`));
+        console.warn(`L4D2 Enhanced: ✗ Timeout waiting for ${label} (${timeout}ms)`);
+        resolve(null);
         return;
       }
       setTimeout(check, interval);
@@ -122,7 +123,7 @@ async function init() {
 
   // 1. Anticheat Button (needs personal panel)
   pPersonal.then(() => {
-    injectAnticheatButton();
+    // injectAnticheatButton(); // Handled by React
   }).catch(e => console.warn(e.message));
 
   // 2. Invitations (needs user identity)
@@ -153,8 +154,8 @@ async function init() {
       try {
         window.L4D2MatchHistory.init();
         // Wait for personal panel to inject the button
-        pPersonal.then(() => {
-          window.L4D2MatchHistory.injectHistoryButton();
+        pPersonal.then((el) => {
+          if (el) window.L4D2MatchHistory.injectHistoryButton();
         }).catch(() => {});
         console.log("L4D2 Enhanced: ✓ Match History initialized");
       } catch (err) {
@@ -173,7 +174,8 @@ async function init() {
   });
 
   if (window.L4D2QueueMonitor) {
-    pPlayerPanel.then(() => {
+    pPlayerPanel.then((el) => {
+      if (!el) return;
       try {
         window.L4D2QueueMonitor.init();
         console.log("L4D2 Enhanced: ✓ Queue Monitor initialized");
@@ -297,6 +299,7 @@ function toggleCustomTheme(enabled, colors) {
     root.style.setProperty("--l4d2-border-color", colors.border || "#3d3d3d");
     root.style.setProperty("--l4d2-accent1", colors.accent1 || "#ff9800");
     root.style.setProperty("--l4d2-accent2", colors.accent2 || "#f57c00");
+    root.style.setProperty("--l4d2-play-text", colors.playText || "#062e6f");
 
     console.log("L4D2 Enhanced: Custom theme applied", colors);
   } else {
@@ -310,6 +313,7 @@ function toggleCustomTheme(enabled, colors) {
     root.style.removeProperty("--l4d2-border-color");
     root.style.removeProperty("--l4d2-accent1");
     root.style.removeProperty("--l4d2-accent2");
+    root.style.removeProperty("--l4d2-play-text");
   }
 }
 
@@ -459,11 +463,14 @@ function startDOMObserver() {
               node.matches?.(".personal, .personal__right") ||
               node.querySelector?.(".personal__right")
             ) {
-              injectAnticheatButton();
+              injectAnticheatButton(); // Ensure it re-injects if panel is recreated
               if (window.L4D2MatchHistory) {
                 window.L4D2MatchHistory.injectHistoryButton();
               }
             }
+            
+            // Aggressively attempt to inject reports button since nav rendering timing varies
+            injectReportsButton();
 
             // Invite Buttons
             if (window.L4D2Invitations) {
@@ -543,6 +550,9 @@ function startDOMObserver() {
     );
   }
 
+  // Inject Reports button next to Bans
+  injectReportsButton();
+
   // (Queue monitor is now always visible)
 
   // Check if Close Panel button already exists on page load (game already ended)
@@ -612,6 +622,66 @@ function cleanPartyNameSpacing(nameNode) {
       }
     }
   });
+}
+
+function injectReportsButton() {
+  if (document.getElementById("nav-reports-btn") || document.getElementById("nav-reports-li")) return;
+  
+  const headerNav = document.querySelector('.header__nav');
+  if (!headerNav) return;
+
+  // Find the bans link by href or exact text ONLY inside the navbar
+  let bansLink = headerNav.querySelector('a[href*="/bans"], a[href*="bans"]');
+  
+  if (!bansLink) {
+    const links = headerNav.querySelectorAll('a');
+    for (let link of links) {
+      if (link.textContent.trim().toLowerCase() === 'bans') {
+        bansLink = link;
+        break;
+      }
+    }
+  }
+  
+  if (!bansLink) return;
+  
+  const reportsLink = document.createElement('a');
+  reportsLink.id = "nav-reports-btn";
+  reportsLink.href = "https://l4d2center.com/banreports/";
+  reportsLink.className = bansLink.className;
+  
+  const oldIcon = bansLink.querySelector('svg, i, img');
+  let classesToCopy = '';
+  if (oldIcon && oldIcon.hasAttribute('class')) {
+    classesToCopy = oldIcon.getAttribute('class');
+    // Remove icon-specific classes if it's font-awesome or similar
+    classesToCopy = classesToCopy.replace(/fa-[a-zA-Z0-9-]+/g, '').replace(/zmdi-[a-zA-Z0-9-]+/g, '');
+  }
+
+  // Use 1.2em for a natural icon size relative to the navbar font. No margins since it's alone.
+  const svgHTML = `<svg class="${classesToCopy}" style="width: 1.2em; height: 1.2em;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><title xmlns="">report</title><path fill="currentColor" d="M12.5 2h-9A2.5 2.5 0 0 0 1 4.5v5A2.5 2.5 0 0 0 3.5 12H4v1.942c0 .842.992 1.292 1.625.737l3.063-2.68H12.5a2.5 2.5 0 0 0 2.5-2.5v-5a2.5 2.5 0 0 0-2.5-2.5zM14 9.5a1.5 1.5 0 0 1-1.5 1.5H8.312L5 13.898V11H3.5A1.5 1.5 0 0 1 2 9.5v-5A1.5 1.5 0 0 1 3.5 3h9A1.5 1.5 0 0 1 14 4.5zM7.508 7.09L7.5 7V4.5l.008-.09a.5.5 0 0 1 .984 0l.008.09V7l-.008.09a.5.5 0 0 1-.984 0M8.75 9.25a.75.75 0 1 1-1.5 0a.75.75 0 0 1 1.5 0"/></svg>`;
+  
+  reportsLink.innerHTML = '';
+  reportsLink.style.display = 'flex';
+  reportsLink.style.alignItems = 'center';
+  reportsLink.style.justifyContent = 'center';
+  // Keep same padding as bans link so hover effect looks right
+  
+  // Create a wrapper if needed or just inject
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = svgHTML;
+  reportsLink.appendChild(tempDiv.firstChild);
+  
+  const container = bansLink.parentElement;
+  if (container && container.tagName === 'LI') {
+     const li = document.createElement('li');
+     li.id = "nav-reports-li";
+     li.className = container.className;
+     li.appendChild(reportsLink);
+     container.parentNode.insertBefore(li, container);
+  } else {
+     bansLink.parentNode.insertBefore(reportsLink, bansLink);
+  }
 }
 
 // Run

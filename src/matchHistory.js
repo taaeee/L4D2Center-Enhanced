@@ -1,5 +1,6 @@
 // L4D2 Center Enhanced - Match History Module
 // Captures match results and saves them to Supabase
+import { createClient } from '@supabase/supabase-js';
 
 const MatchHistory = {
   supabase: null,
@@ -19,17 +20,13 @@ const MatchHistory = {
       return;
     }
 
-    if (
-      typeof window.supabase !== "undefined" &&
-      window.supabase.createClient
-    ) {
-      this.supabase = window.supabase.createClient(
-        this.config.url,
-        this.config.key
-      );
+    try {
+      this.supabase = createClient(this.config.url, this.config.key, {
+        auth: { persistSession: false }
+      });
       console.log("L4D2 Enhanced: MatchHistory ready for user", this.currentUser);
-    } else {
-      console.warn("L4D2 Enhanced: MatchHistory - Supabase client not found");
+    } catch (e) {
+      console.warn("L4D2 Enhanced: MatchHistory - Supabase client init failed", e);
     }
   },
 
@@ -50,11 +47,10 @@ const MatchHistory = {
     if (!this.supabase || !this.currentUser) {
       // Try late init if user wasn't available at startup
       if (!this.currentUser) this.currentUser = this.identifyUser();
-      if (!this.supabase && typeof window.supabase !== "undefined") {
-        this.supabase = window.supabase.createClient(
-          this.config.url,
-          this.config.key
-        );
+      if (!this.supabase) {
+        this.supabase = createClient(this.config.url, this.config.key, {
+          auth: { persistSession: false }
+        });
       }
       if (!this.supabase || !this.currentUser) {
         console.warn("L4D2 Enhanced: MatchHistory - Cannot capture, not ready");
@@ -283,8 +279,11 @@ const MatchHistory = {
 
     // Ensure Supabase client and user are available before opening
     if (!this.currentUser) this.currentUser = this.identifyUser();
-    if (!this.supabase && typeof window.supabase !== "undefined" && window.supabase.createClient) {
-      this.supabase = window.supabase.createClient(this.config.url, this.config.key);
+    if (!this.supabase) {
+      this.supabase = createClient(this.config.url, this.config.key, {
+        global: { fetch: backgroundFetch },
+        auth: { persistSession: false }
+      });
     }
 
     const overlay = document.createElement("div");
@@ -332,8 +331,10 @@ const MatchHistory = {
 
     // Re-try init if needed
     if (!this.currentUser) this.currentUser = this.identifyUser();
-    if (!this.supabase && typeof window.supabase !== "undefined" && window.supabase.createClient) {
-      this.supabase = window.supabase.createClient(this.config.url, this.config.key);
+    if (!this.supabase) {
+      this.supabase = createClient(this.config.url, this.config.key, {
+        auth: { persistSession: false }
+      });
     }
 
     if (!this.supabase || !this.currentUser) {
