@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import ReactMarkdown from 'react-markdown';
 
 export default function WelcomeModal() {
   const [show, setShow] = useState(false);
@@ -109,9 +110,9 @@ export default function WelcomeModal() {
                   <div className="w-6 h-6 border-2 border-[#a8c7fa] border-t-transparent rounded-full animate-spin"></div>
                 </div>
               ) : (
-                <pre className="text-[13px] font-sans text-[#e1e2e8] whitespace-pre-wrap leading-relaxed m-0 opacity-90">
-                  {changelog}
-                </pre>
+                <div className="text-[13px] font-sans text-[#e1e2e8] leading-relaxed opacity-90 max-w-none [&_p]:my-1.5 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-1.5 [&_li]:my-0.5 [&_h1]:text-lg [&_h1]:font-semibold [&_h1]:mt-4 [&_h1]:mb-2 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:font-medium [&_h3]:mt-3 [&_h3]:mb-1 [&_a]:text-[#a8c7fa] hover:[&_a]:text-[#b4cff8] [&_a]:underline [&_strong]:text-white [&_strong]:font-semibold first:[&>*:first-child]:mt-0">
+                  <ReactMarkdown>{changelog}</ReactMarkdown>
+                </div>
               )}
             </div>
           </div>

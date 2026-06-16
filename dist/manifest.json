@@ -29,7 +29,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.jsx-loader-Onx8q-el.js"
+        "assets/index.jsx-loader-BmdRNSFe.js"
       ],
       "matches": [
         "https://l4d2center.com/play.html",
@@ -37,7 +37,7 @@
       ],
       "run_at": "document_end",
       "css": [
-        "assets/index-BgR-AnCE.css"
+        "assets/index-BeaRsfPd.css"
       ]
     }
   ],
@@ -62,9 +62,9 @@
         "https://l4d2center.com/*"
       ],
       "resources": [
-        "assets/chunk-C0phanGV.js",
-        "assets/jsx-runtime-CZP94eBP.js",
-        "assets/index.jsx-CPiRkyaU.js"
+        "assets/chunk-CacB07dV.js",
+        "assets/jsx-runtime-6DojhKuT.js",
+        "assets/index.jsx-CSUVZ44R.js"
       ],
       "use_dynamic_url": false
     }
