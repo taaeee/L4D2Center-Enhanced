@@ -9,9 +9,9 @@
     "file": "assets/chunk-C0phanGV.js",
     "name": "chunk"
   },
-  "_index.jsx-loader-B7QixIIC.js": {
-    "file": "assets/index.jsx-loader-B7QixIIC.js",
-    "src": "_index.jsx-loader-B7QixIIC.js"
+  "_index.jsx-loader-Onx8q-el.js": {
+    "file": "assets/index.jsx-loader-Onx8q-el.js",
+    "src": "_index.jsx-loader-Onx8q-el.js"
   },
   "_jsx-runtime-CZP94eBP.js": {
     "file": "assets/jsx-runtime-CZP94eBP.js",
@@ -30,7 +30,7 @@
     ]
   },
   "src/content/index.jsx": {
-    "file": "assets/index.jsx-CKf0WCnF.js",
+    "file": "assets/index.jsx-CPiRkyaU.js",
     "name": "index.jsx",
     "src": "src/content/index.jsx",
     "isEntry": true,
@@ -39,11 +39,11 @@
       "_jsx-runtime-CZP94eBP.js"
     ],
     "css": [
-      "assets/index-qpVoPkfI.css"
+      "assets/index-BgR-AnCE.css"
     ]
   },
   "src/popup/index.html": {
-    "file": "assets/index.html-DOD4bjVV.js",
+    "file": "assets/index.html-B6E9zrWr.js",
     "name": "index.html",
     "src": "src/popup/index.html",
     "isEntry": true,
