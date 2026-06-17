@@ -11,8 +11,9 @@
 # L4D2Center Enhanced
 
 ![](https://64.media.tumblr.com/e336d963d32f44524c81127ef14de93d/5142b4296095f390-ce/s540x810/5f2d9b54071b7a48f735ff685a9d2ca2f8bdb895.pnj)
-[⬇️ DOWNLOAD](https://github.com/taaeee/L4D2Center-Enhanced/releases/download/v2.0.0/Extension.zip)
 
+# Download
+[⬇️ DOWNLOAD](https://github.com/taaeee/L4D2Center-Enhanced/releases/download/v2.0.0/Extension.zip)
 
 ## Table of Contents
 
