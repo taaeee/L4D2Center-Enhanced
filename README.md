@@ -22,7 +22,7 @@
 - [Video tutorial](#video-tutorial)
 
 ## How to install extension
-**Clone repository or [Download Lastest Version](#download)"**
+**Clone repository or [Download Lastest Version](https://github.com/taaeee/L4D2Center-Enhanced/releases/download/v2.0.0/Extension.zip)**
 
 1. Extract the **Extension.zip**.
 2. Open your browser in **extensions tab**.
@@ -31,7 +31,7 @@
 5. Reload l4d2center.com.
 
 ## How to configure the launcher
-1. Open the **L4D2CenterEnhanced/native_host** folder.
+1. Open the **native_host** folder.
 2. Launch **install_host.bat**
 3. Find your extension ID in your extension popup or extensions tab.
 4. Paste it in the program and press Enter.
