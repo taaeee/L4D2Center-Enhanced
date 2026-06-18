@@ -8,13 +8,13 @@ export default function MatchmakingTransition() {
 
   useEffect(() => {
     const handleClick = (e) => {
-      const target = e.target.closest('[onclick*="SearchGameButton"], #playerpanel .ready__btn, .btn');
+      const target = e.target.closest('[onclick*="SearchGameButton"], .btn');
       
       if (target) {
         const onclickAttr = target.getAttribute('onclick') || '';
         const isSearchGame = onclickAttr.includes('SearchGameButton');
         
-        if (!isSearchGame && !target.matches('#playerpanel .ready__btn')) {
+        if (!isSearchGame) {
           return;
         }
 
