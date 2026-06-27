@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "L4D2 Center Enhanced",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Mejoras visuales y utilidades para L4D2Center (AutoReady, Temas, Iconos).",
   "icons": {
     "16": "icons/icon16.png",
@@ -29,7 +29,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.jsx-loader-D6IXWf_N.js"
+        "assets/index.jsx-loader-CCWzLeaB.js"
       ],
       "matches": [
         "https://l4d2center.com/play.html",
@@ -37,7 +37,7 @@
       ],
       "run_at": "document_end",
       "css": [
-        "assets/index-CmByrlG0.css"
+        "assets/index-q3y-1OBE.css"
       ]
     }
   ],
@@ -64,7 +64,7 @@
       "resources": [
         "assets/chunk-CacB07dV.js",
         "assets/jsx-runtime-6DojhKuT.js",
-        "assets/index.jsx-XYcMN1XH.js"
+        "assets/index.jsx-D1XHFhAM.js"
       ],
       "use_dynamic_url": false
     }
