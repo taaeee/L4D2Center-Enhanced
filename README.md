@@ -5,7 +5,8 @@
 - Custom themes.
 - Friend list and party invitations.
 - Streamer mode.
-
+- OBS overlay for mmr and match info.
+- Add players to avoid list.
 
 
 # L4D2Center Enhanced
