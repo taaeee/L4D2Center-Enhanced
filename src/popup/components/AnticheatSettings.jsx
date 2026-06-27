@@ -1,21 +1,23 @@
 import React from 'react';
 import { useChromeStorage } from '../hooks/useChromeStorage';
+import { useTranslation } from '../i18n';
 
 export default function AnticheatSettings() {
+  const { t } = useTranslation();
   const [anticheatPath, setAnticheatPath] = useChromeStorage('anticheatPath', '');
   const [statusMsg, setStatusMsg] = React.useState({ text: '', type: '' });
 
   const handleBrowse = () => {
     chrome.runtime.sendMessage({ type: 'browseAnticheat' }, (response) => {
       if (chrome.runtime.lastError) {
-        setStatusMsg({ text: 'Error connecting to background script.', type: 'error' });
+        setStatusMsg({ text: t("errBackground"), type: 'error' });
       } else if (response && response.success && response.path) {
         setAnticheatPath(response.path);
-        setStatusMsg({ text: 'Path saved successfully!', type: 'success' });
+        setStatusMsg({ text: t("pathSaved"), type: 'success' });
       } else if (response && response.error) {
-        setStatusMsg({ text: 'Error: ' + response.error, type: 'error' });
+        setStatusMsg({ text: t("errPrefix") + response.error, type: 'error' });
       } else {
-        setStatusMsg({ text: 'No path selected.', type: 'error' });
+        setStatusMsg({ text: t("noPath"), type: 'error' });
       }
       setTimeout(() => setStatusMsg({ text: '', type: '' }), 3000);
     });
@@ -23,10 +25,10 @@ export default function AnticheatSettings() {
 
   return (
     <>
-      <div className="section-header">Anticheat</div>
+      <div className="section-header">{t("anticheat")}</div>
       <div className="settings-list">
         <div className="setting-item" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
-          <div className="setting-label">Anticheat Path (.exe)</div>
+          <div className="setting-label">{t("anticheatPath")}</div>
           <div className="path-input-group">
             <input 
               type="text" 
@@ -37,12 +39,12 @@ export default function AnticheatSettings() {
             />
             <button 
               className="path-browse-btn"
-              title="Browse for .exe"
+              title={t("browseExe")}
               onClick={handleBrowse}
             >
               📁
             </button>
-            <button className="path-save-btn">Save</button>
+            <button className="path-save-btn">{t("save")}</button>
           </div>
           {statusMsg.text && (
             <div className="path-status" style={{ color: statusMsg.type === 'error' ? '#ff6b6b' : '#a8dab5' }}>
@@ -50,10 +52,11 @@ export default function AnticheatSettings() {
             </div>
           )}
           <div className="setup-note">
-            Run <strong>native_host/install_host.bat</strong> once to enable launch.
+            {t("runHostNoteBefore")}<strong>native_host/install_host.bat</strong>{t("runHostNoteAfter")}
           </div>
         </div>
       </div>
     </>
   );
 }
+

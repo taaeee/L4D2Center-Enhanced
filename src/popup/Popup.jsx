@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import "./popup.css";
 import { useChromeStorage } from "./hooks/useChromeStorage";
+import { useTranslation } from "./i18n";
 import ThemeSettings from "./components/ThemeSettings";
 import AnticheatSettings from "./components/AnticheatSettings";
 import AvoidListSettings from "./components/AvoidListSettings";
 import UpdaterSettings from "./components/UpdaterSettings";
+import OBSSettings from "./components/OBSSettings";
 import logo from "../../icons/icon48.png";
 
 export default function Popup() {
+  const { t, lang, setLang } = useTranslation();
   const [copied, setCopied] = useState(false);
   const extId = chrome?.runtime?.id || "development";
 
@@ -26,25 +29,54 @@ export default function Popup() {
 
   return (
     <div className="container">
-      <div className="header">
-        <img src={logo} alt="Logo" className="logo" />
-        <div className="title">L4D2 Center Enhanced</div>
+      <div className="header justify-between">
+        <div className="flex items-center">
+          <img src={logo} alt="Logo" className="logo" />
+          <div className="title">L4D2 Center Enhanced</div>
+        </div>
+        <div className="flex items-center bg-[var(--card-bg)] rounded-full p-1 border border-[#44474f] ml-auto gap-0.5 shadow-sm">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--text-secondary)] ml-1.5 mr-0.5">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <button
+            onClick={() => setLang("es")}
+            className={`px-2.5 py-1 text-[11px] font-bold tracking-wider rounded-full transition-all duration-200 cursor-pointer border-0 select-none ${
+              lang === "es"
+                ? "bg-[var(--accent)] text-[#062e6f] shadow-sm scale-102"
+                : "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.06)]"
+            }`}
+          >
+            ES
+          </button>
+          <button
+            onClick={() => setLang("en")}
+            className={`px-2.5 py-1 text-[11px] font-bold tracking-wider rounded-full transition-all duration-200 cursor-pointer border-0 select-none ${
+              lang === "en"
+                ? "bg-[var(--accent)] text-[#062e6f] shadow-sm scale-102"
+                : "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.06)]"
+            }`}
+          >
+            EN
+          </button>
+        </div>
       </div>
 
-      <div className="section-header">Info</div>
+      <div className="section-header">{t("info")}</div>
       <div className="settings-list mb-4">
         <div 
           className="setting-item cursor-pointer" 
           onClick={handleCopyId}
-          title="Copy Extension ID"
+          title={t("copyExtensionId")}
         >
           <div>
-            <div className="setting-label">Extension ID</div>
+            <div className="setting-label">{t("extensionId")}</div>
             <div className="setting-desc font-mono">
               {extId}
             </div>
           </div>
-          <div className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors ${copied ? 'bg-[rgba(168,199,250,0.15)] text-[var(--accent)]' : 'text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.08)]'}`}>
+          <div className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors ${copied ? 'bg-[rgba(168,199,250,0.15)] text-(--accent)' : 'text-(--text-secondary) hover:bg-[rgba(255,255,255,0.08)]'}`}>
             {copied ? (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             ) : (
@@ -54,13 +86,13 @@ export default function Popup() {
         </div>
       </div>
 
-      <div className="section-header">Features</div>
+      <div className="section-header">{t("features")}</div>
       <div className="settings-list">
         <div className="setting-item">
           <div>
-            <div className="setting-label">Auto Ready</div>
+            <div className="setting-label">{t("autoReady")}</div>
             <div className="setting-desc">
-              Automatically clicks "Ready" in lobby
+              {t("autoReadyDesc")}
             </div>
           </div>
           <label className="switch">
@@ -75,8 +107,8 @@ export default function Popup() {
 
         <div className="setting-item">
           <div>
-            <div className="setting-label">Streamer Mode</div>
-            <div className="setting-desc">Hides party codes</div>
+            <div className="setting-label">{t("streamerMode")}</div>
+            <div className="setting-desc">{t("streamerModeDesc")}</div>
           </div>
           <label className="switch">
             <input
@@ -90,8 +122,8 @@ export default function Popup() {
 
         <div className="setting-item">
           <div>
-            <div className="setting-label">Custom Theme</div>
-            <div className="setting-desc">Apply custom colors to page</div>
+            <div className="setting-label">{t("customTheme")}</div>
+            <div className="setting-desc">{t("customThemeDesc")}</div>
           </div>
           <label className="switch">
             <input
@@ -105,6 +137,7 @@ export default function Popup() {
       </div>
 
       <ThemeSettings />
+      <OBSSettings />
       <AnticheatSettings />
       <AvoidListSettings />
       <UpdaterSettings />

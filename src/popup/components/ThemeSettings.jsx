@@ -1,5 +1,6 @@
 import React from 'react';
 import { useChromeStorage } from '../hooks/useChromeStorage';
+import { useTranslation } from '../i18n';
 
 const THEMES = {
   default: { bg: "#111318", top: "#1d2024", text: "#e1e2e8", border: "#44474f", accent1: "#a8c7fa", accent2: "#d3e3fd", playText: "#062e6f" },
@@ -10,6 +11,7 @@ const THEMES = {
 };
 
 export default function ThemeSettings() {
+  const { t } = useTranslation();
   const [themePreset, setThemePreset] = useChromeStorage('themePreset', 'default');
   const [themeColors, setThemeColors] = useChromeStorage('themeColors', THEMES.default);
 
@@ -23,9 +25,17 @@ export default function ThemeSettings() {
     setThemeColors({ ...themeColors, [key]: value });
   };
 
+  const presetNames = {
+    default: t("presetDefault"),
+    purple: t("presetPurple"),
+    blue: t("presetBlue"),
+    red: t("presetRed"),
+    green: t("presetGreen"),
+  };
+
   return (
     <>
-      <div className="section-header text-red-500 font-bold">Theme Presets</div>
+      <div className="section-header text-red-500 font-bold">{t("themePresets")}</div>
       <div className="theme-presets">
         {Object.keys(THEMES).map(preset => (
           <button 
@@ -34,46 +44,46 @@ export default function ThemeSettings() {
             className={`theme-btn ${themePreset === preset ? 'active' : ''}`}
             onClick={() => handlePresetClick(preset)}
           >
-            {preset.charAt(0).toUpperCase() + preset.slice(1)}
+            {presetNames[preset] || preset}
           </button>
         ))}
       </div>
 
-      <div className="section-header">Custom Colors</div>
+      <div className="section-header">{t("customColors")}</div>
       <div className="settings-list">
         <div className="color-row">
           <div className="color-item">
-            <label>Background</label>
+            <label>{t("bgLabel")}</label>
             <input type="color" className="color-picker" value={themeColors.bg} onChange={(e) => handleColorChange('bg', e.target.value)} />
           </div>
           <div className="color-item">
-            <label>Top/Cards</label>
+            <label>{t("topLabel")}</label>
             <input type="color" className="color-picker" value={themeColors.top} onChange={(e) => handleColorChange('top', e.target.value)} />
           </div>
         </div>
         <div className="color-row">
           <div className="color-item">
-            <label>Text</label>
+            <label>{t("textLabel")}</label>
             <input type="color" className="color-picker" value={themeColors.text} onChange={(e) => handleColorChange('text', e.target.value)} />
           </div>
           <div className="color-item">
-            <label>Border</label>
+            <label>{t("borderLabel")}</label>
             <input type="color" className="color-picker" value={themeColors.border} onChange={(e) => handleColorChange('border', e.target.value)} />
           </div>
         </div>
         <div className="color-row">
           <div className="color-item">
-            <label>Accent 1</label>
+            <label>{t("accent1Label")}</label>
             <input type="color" className="color-picker" value={themeColors.accent1} onChange={(e) => handleColorChange('accent1', e.target.value)} />
           </div>
           <div className="color-item">
-            <label>Accent 2</label>
+            <label>{t("accent2Label")}</label>
             <input type="color" className="color-picker" value={themeColors.accent2} onChange={(e) => handleColorChange('accent2', e.target.value)} />
           </div>
         </div>
         <div className="color-row">
           <div className="color-item" style={{ gridColumn: '1 / -1' }}>
-            <label>Play Text</label>
+            <label>{t("playTextLabel")}</label>
             <input type="color" className="color-picker" value={themeColors.playText || '#062e6f'} onChange={(e) => handleColorChange('playText', e.target.value)} />
           </div>
         </div>
@@ -81,3 +91,4 @@ export default function ThemeSettings() {
     </>
   );
 }
+

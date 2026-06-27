@@ -71,6 +71,16 @@ const MatchHistory = {
 
       console.log("L4D2 Enhanced: MatchHistory - Captured match data:", data);
       await this.saveMatch(data);
+
+      if (window.OBSCaster) {
+        window.OBSCaster.lastMmrChange = data.mmrChange;
+        if (window.OBSCaster.lastMmr) {
+          window.OBSCaster.broadcastMessage("mmr_update", {
+            mmr: window.OBSCaster.lastMmr,
+            mmrChange: data.mmrChange,
+          });
+        }
+      }
     } catch (err) {
       console.error("L4D2 Enhanced: MatchHistory - Capture error:", err);
     }

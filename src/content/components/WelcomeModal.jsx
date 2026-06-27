@@ -50,12 +50,12 @@ export default function WelcomeModal() {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-99999 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-[#111318] text-[#e1e2e8] rounded-3xl w-full max-w-md p-0 overflow-hidden shadow-2xl flex flex-col max-h-[85vh] border border-[#373b43]">
         {/* Header */}
         <div className="px-6 py-5 border-b border-[#373b43] flex items-center justify-between shrink-0 bg-[#1d2024]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#a8c7fa] to-[#062e6f] flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-linear-to-br from-[#a8c7fa] to-[#062e6f] flex items-center justify-center shrink-0">
               <svg
                 width="24"
                 height="24"

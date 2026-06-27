@@ -6,6 +6,7 @@ import '../lib/supabase.js';
 import '../matchHistory.js';
 import '../invitations.js';
 import '../queueMonitor.js';
+import '../obsCaster.js';
 import '../content.js';
 import '../inject.css';
 

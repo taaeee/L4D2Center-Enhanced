@@ -198,6 +198,15 @@ async function init() {
     console.warn("L4D2 Enhanced: ✗ L4D2QueueMonitor module not found");
   }
 
+  if (window.OBSCaster) {
+    try {
+      window.OBSCaster.init();
+      console.log("L4D2 Enhanced: ✓ OBSCaster initialized");
+    } catch (err) {
+      console.error("L4D2 Enhanced: ✗ OBSCaster init failed:", err);
+    }
+  }
+
   console.log("L4D2 Enhanced: ✓ Initialization promises dispatched");
 }
 
@@ -525,6 +534,33 @@ function startDOMObserver() {
                     }
                   }, 2000);
                 }
+              }
+            }
+
+            // OBSCaster - Detect when the match starts!
+            if (window.OBSCaster) {
+              const matchPanel = node.matches?.('ingamerenderpanel') ? node : node.querySelector?.('ingamerenderpanel');
+              if (matchPanel) {
+                console.log("L4D2 Enhanced: ingamerenderpanel detected for OBSCaster");
+                window.OBSCaster.captureAndBroadcast(matchPanel);
+              }
+              
+              // Fallback: detect "The server is ready" or "Config" blocks indicating a match is found
+              if (node.textContent && (node.textContent.includes("The server is ready") || node.textContent.includes("You have 6 minutes to join"))) {
+                const mp = document.querySelector("ingamerenderpanel") || document.querySelector(".match-panel");
+                if (mp) {
+                   console.log("L4D2 Enhanced: Server ready text detected for OBSCaster");
+                   window.OBSCaster.captureAndBroadcast(mp);
+                }
+              }
+
+              // Detect when the match is over or finding server to reset to waiting state
+              if (node.textContent && (node.textContent.includes("Finding a dedicated server") || node.textContent.includes("In Queue"))) {
+                 // ONLY set waiting state if the match panel is actually gone
+                 if (!document.querySelector("ingamerenderpanel") && !document.querySelector(".match-panel")) {
+                    console.log("L4D2 Enhanced: Reverting to waiting state (Match panel is gone)");
+                    window.OBSCaster.setWaitingState();
+                 }
               }
             }
           }

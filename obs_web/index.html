@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>L4D2 Center Enhanced - OBS Overlay</title>
+  
+  <!-- Tailwind CSS (via CDN for standalone deployment) -->
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --survivor-color: #3b82f6; /* blue-500 */
+      --infected-color: #ef4444; /* red-500 */
+      --glass-bg: rgba(15, 23, 42, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      /* Transparent background for OBS by default */
+      background-color: transparent;
+      color: white;
+      overflow: hidden; /* No scrollbars in OBS */
+    }
+
+    /* Test mode background (can be toggled for testing) */
+    body.test-mode {
+      background-image: url('https://l4d2center.com/images/maps/Dead%20Center%202025.avif');
+      background-size: cover;
+      background-position: center;
+    }
+
+    .glass-panel {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    /* Animations */
+    @keyframes slideInUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .animate-slide-in {
+      animation: slideInUp 0.5s ease-out forwards;
+    }
+
+    .animate-pulse-slow {
+      animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    .player-card {
+      transition: all 0.3s ease;
+    }
+    
+    .team-survivors .player-card {
+      border-left: 4px solid var(--survivor-color);
+    }
+    
+    .team-infected .player-card {
+      border-left: 4px solid var(--infected-color);
+    }
+    
+    /* Hide scrollbar completely */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+</head>
+<body class="w-screen h-screen flex flex-col p-6 items-center">
+
+  <!-- Status / Waiting Screen -->
+  <div id="waiting-screen" class="glass-panel animate-pulse-slow rounded-xl p-6 mt-10 flex flex-col items-center justify-center text-center max-w-md w-full">
+    <div class="w-16 h-16 mb-4 rounded-full border-4 border-[rgba(255,255,255,0.1)] border-t-blue-500 animate-spin"></div>
+    <h2 class="text-xl font-bold text-white tracking-wide">Esperando partida...</h2>
+    <p class="text-sm text-gray-400 mt-2">Asegúrate de tener la pestaña de L4D2Center abierta.</p>
+    <div id="connection-status" class="mt-4 text-xs font-mono text-gray-500">Desconectado</div>
+  </div>
+
+  <!-- Match Screen (Hidden initially) -->
+  <div id="match-screen" class="w-full max-w-5xl hidden flex-col gap-6 animate-slide-in">
+    
+    <!-- Header: Map Info -->
+    <div class="glass-panel rounded-2xl p-4 flex items-center justify-between overflow-hidden relative">
+      <div id="map-bg" class="absolute inset-0 opacity-20 bg-cover bg-center z-0"></div>
+      <div class="relative z-10 flex items-center gap-4">
+        <div class="w-3 h-12 bg-linear-to-b from-blue-500 to-red-500 rounded-full"></div>
+        <div>
+          <h1 class="text-xs uppercase tracking-widest text-gray-400 font-semibold">PARTIDA EN CURSO</h1>
+          <h2 id="map-name" class="text-2xl font-bold text-white uppercase tracking-wider">Desconocido</h2>
+        </div>
+      </div>
+      <div class="relative z-10 bg-black/50 px-4 py-2 rounded-lg border border-white/10">
+        <span class="text-xs text-gray-400 uppercase tracking-widest">L4D2 Center Enhanced</span>
+      </div>
+    </div>
+
+    <!-- Teams Grid -->
+    <div class="grid grid-cols-2 gap-8 w-full items-start">
+      
+      <!-- Survivors Column -->
+      <div class="flex flex-col gap-3 team-survivors">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xl font-black text-blue-400 uppercase tracking-widest drop-shadow-md">Supervivientes</h3>
+          <span id="survivor-avg-mmr" class="text-sm font-bold text-blue-200 bg-blue-900/50 px-3 py-1 rounded-full border border-blue-500/30">AVG: 0</span>
+        </div>
+        <div id="survivors-list" class="flex flex-col gap-2">
+          <!-- Players injected here via JS -->
+        </div>
+      </div>
+
+      <!-- Infected Column -->
+      <div class="flex flex-col gap-3 team-infected">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xl font-black text-red-400 uppercase tracking-widest drop-shadow-md">Infectados</h3>
+          <span id="infected-avg-mmr" class="text-sm font-bold text-red-200 bg-red-900/50 px-3 py-1 rounded-full border border-red-500/30">AVG: 0</span>
+        </div>
+        <div id="infected-list" class="flex flex-col gap-2">
+          <!-- Players injected here via JS -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Template for a player row -->
+  <template id="player-template">
+    <div class="player-card glass-panel rounded-lg flex items-center p-2 gap-3 hover:bg-white/5">
+      <img class="player-avatar w-12 h-12 rounded bg-black/50 object-cover shadow-sm" src="" alt="Avatar">
+      <div class="flex-1 min-w-0">
+        <div class="player-name text-base font-bold text-white truncate drop-shadow-md">PlayerName</div>
+      </div>
+      <div class="player-mmr-container relative flex items-center justify-center w-12 h-12 shrink-0">
+        <img class="player-badge absolute inset-0 w-full h-full drop-shadow-md" src="" alt="Badge">
+        <div class="player-mmr relative z-10 text-center text-[10px] font-black text-white/90 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+          1500
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
